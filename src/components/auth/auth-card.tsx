@@ -48,18 +48,19 @@ export function AuthCard({
   }
 
   return (
-    <div className="grid flex-1 w-full md:grid-cols-2 md:grid-rows-1 overflow-hidden">
-      <div className="relative hidden md:block">
+    <div className="flex flex-1 w-full">
+      {/* Side image — hidden on mobile so the form gets the full screen */}
+      <div className="relative hidden md:block md:w-1/2">
         <Image
           src={sideImage.src}
           alt={sideImage.alt}
           fill
-          sizes="(min-width: 768px) 50vw, 100vw"
+          sizes="(min-width: 768px) 50vw, 0px"
           className="object-cover"
           priority
         />
       </div>
-      <div className="flex items-center justify-center overflow-y-auto">
+      <div className="flex w-full md:w-1/2 items-center justify-center">
         {formColumn}
       </div>
     </div>
