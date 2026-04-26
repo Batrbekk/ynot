@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Phase worktrees — they have their own builds; main lint should not scan them
+    ".worktrees/**",
   ]),
 ]);
 

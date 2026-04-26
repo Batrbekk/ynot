@@ -9,6 +9,12 @@ export const ProductDetailsSchema = z.object({
   sizing: z.string(),
 });
 
+export const ColourOptionSchema = z.object({
+  name: z.string().min(1),
+  hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+});
+export type ColourOption = z.infer<typeof ColourOptionSchema>;
+
 export const ProductSchema = z.object({
   id: z.string().min(1),
   slug: z.string().min(1),
@@ -18,7 +24,10 @@ export const ProductSchema = z.object({
   currency: z.literal("GBP"),
   description: z.string(),
   images: z.array(z.string()),
+  /** Default/primary colour name (kept for backwards-compat with existing carts). */
   colour: z.string().optional(),
+  /** Optional colour swatches; when present the PDP renders a ColourPicker. */
+  colourOptions: z.array(ColourOptionSchema).optional(),
   sizes: z.array(SizeSchema),
   categorySlugs: z.array(z.string()),
   stock: z.partialRecord(SizeSchema, z.number().int().nonnegative()),

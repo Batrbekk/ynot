@@ -5,21 +5,19 @@ import { WhatsAppWidget } from "@/components/whatsapp-widget";
 import { HeroSection } from "@/components/blocks/hero-section";
 import { BrandStatement } from "@/components/blocks/brand-statement";
 import { ProductsRow } from "@/components/blocks/products-row";
-import { EditorialBlock } from "@/components/blocks/editorial-block";
+import { EditorialOverlay } from "@/components/blocks/editorial-overlay";
 import { LookbookCarousel } from "@/components/blocks/lookbook-carousel";
 import { getHero, getLookbook } from "@/lib/data/content";
-import { getNewArrivals, getAllProducts } from "@/lib/data/products";
+import { getNewArrivals } from "@/lib/data/products";
 
 export default async function Home() {
-  const [hero, lookbook, newArrivals, allProducts] = await Promise.all([
+  const [hero, lookbook, newArrivals] = await Promise.all([
     getHero(),
     getLookbook(),
     getNewArrivals(4),
-    getAllProducts(),
   ]);
 
-  const timeless =
-    allProducts.find((p) => p.slug === "the-chelsea-jacket") ?? allProducts[0];
+  const timelessImage = "/cms/timeless.jpg";
 
   return (
     <>
@@ -40,10 +38,10 @@ export default async function Home() {
           products={newArrivals}
           ctaHref="/collection/jackets"
         />
-        <EditorialBlock
+        <EditorialOverlay
           title="Timeless Collection"
           body="Signature silhouettes that anchor the collection, crafted with ease and refinement for continual wear."
-          image={timeless.images[0]}
+          image={timelessImage}
           ctaHref="/collection/jackets"
           ctaLabel="Explore"
         />

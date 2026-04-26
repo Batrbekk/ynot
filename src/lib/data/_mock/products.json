@@ -34,7 +34,17 @@
       "materials": "100% Italian suede. Cotton lining.",
       "care": "Dry clean only. Store on a padded hanger.",
       "sizing": "Fits true to size. Model wears size S."
-    }
+    },
+    "colourOptions": [
+      {
+        "name": "Chocolate Brown",
+        "hex": "#3D3428"
+      },
+      {
+        "name": "Sand",
+        "hex": "#C4A87C"
+      }
+    ]
   },
   {
     "id": "prod_002",
@@ -108,7 +118,17 @@
       "materials": "100% lamb leather. LWG-certified tannery.",
       "care": "Wipe with a soft damp cloth. Condition every 6 months.",
       "sizing": "Slim cut. Consider sizing up if between sizes."
-    }
+    },
+    "colourOptions": [
+      {
+        "name": "Black",
+        "hex": "#1A1A1A"
+      },
+      {
+        "name": "Cognac",
+        "hex": "#8B5A2B"
+      }
+    ]
   },
   {
     "id": "prod_004",
@@ -215,7 +235,21 @@
       "materials": "Wool blend.",
       "care": "Dry clean.",
       "sizing": "Tailored fit."
-    }
+    },
+    "colourOptions": [
+      {
+        "name": "Navy",
+        "hex": "#1B2A4E"
+      },
+      {
+        "name": "Charcoal",
+        "hex": "#3A3A3A"
+      },
+      {
+        "name": "Camel",
+        "hex": "#C4A87C"
+      }
+    ]
   },
   {
     "id": "prod_007",
@@ -289,6 +323,16 @@
       "materials": "Lamb leather, ribbed knit trims.",
       "care": "Wipe with damp cloth. Condition every 6 months.",
       "sizing": "Relaxed through the body."
-    }
+    },
+    "colourOptions": [
+      {
+        "name": "Cognac",
+        "hex": "#8B5A2B"
+      },
+      {
+        "name": "Black",
+        "hex": "#1A1A1A"
+      }
+    ]
   }
 ]

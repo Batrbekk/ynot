@@ -195,10 +195,11 @@ git commit -m "feat(auth): add minimal AuthHeader (logo only, centred)"
 **Files:**
 - Create: `src/components/auth/auth-card.tsx`
 
-- [ ] **Step 1:** Implement (centered card layout used by all auth pages):
+- [ ] **Step 1:** Implement (centered card layout, optional side image for visual marketing):
 
 ```tsx
 import * as React from "react";
+import Image from "next/image";
 import { Display } from "@/components/ui/typography";
 
 export interface AuthCardProps {
@@ -206,23 +207,32 @@ export interface AuthCardProps {
   subtitle?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** Optional side image (desktop only) — editorial fashion shot from the .pen design. */
+  sideImage?: string;
 }
 
-export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
+export function AuthCard({ title, subtitle, children, footer, sideImage }: AuthCardProps) {
   return (
-    <div className="mx-auto w-full max-w-[440px] px-6 py-16 md:py-24">
-      <div className="text-center mb-10">
-        <Display level="md" as="h1">{title}</Display>
-        {subtitle && (
-          <p className="mt-3 text-[14px] text-foreground-secondary">{subtitle}</p>
-        )}
-      </div>
-      {children}
-      {footer && (
-        <div className="mt-8 text-center text-[13px] text-foreground-secondary">
-          {footer}
+    <div className={sideImage ? "grid min-h-[calc(100vh-4rem)] md:grid-cols-2" : "min-h-[calc(100vh-4rem)] flex items-start justify-center"}>
+      {sideImage && (
+        <div className="relative hidden md:block">
+          <Image src={sideImage} alt="" fill priority sizes="50vw" className="object-cover" />
         </div>
       )}
+      <div className="mx-auto w-full max-w-[440px] px-6 py-16 md:py-24">
+        <div className="text-center mb-10">
+          <Display level="md" as="h1">{title}</Display>
+          {subtitle && (
+            <p className="mt-3 text-[14px] text-foreground-secondary">{subtitle}</p>
+          )}
+        </div>
+        {children}
+        {footer && (
+          <div className="mt-8 text-center text-[13px] text-foreground-secondary">
+            {footer}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -824,6 +834,7 @@ function SignInPageInner() {
     <AuthCard
       title="Sign in"
       subtitle="Welcome back. Sign in to access your account and exclusive benefits."
+      sideImage="/cms/auth/sign-in.jpg"
       footer={
         <>
           New to YNOT?{" "}
@@ -890,6 +901,7 @@ function RegisterPageInner() {
     <AuthCard
       title="Create account"
       subtitle="Join YNOT London for exclusive access and benefits."
+      sideImage="/cms/auth/register.jpg"
       footer={
         <>
           Already have an account?{" "}

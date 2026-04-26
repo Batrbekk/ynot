@@ -73,11 +73,7 @@ export default async function ProductPage({ params }: PageProps) {
             <div className="grid gap-10 md:grid-cols-2 md:gap-16">
               <ProductGallery images={product.images} alt={product.name} />
               <div className="flex flex-col gap-10">
-                <ProductInfoPanel
-                  name={product.name}
-                  price={product.price}
-                  colour={product.colour}
-                >
+                <ProductInfoPanel name={product.name} price={product.price}>
                   <AddToBagSection product={product} />
                 </ProductInfoPanel>
                 <ProductDetailsAccordion product={product} />

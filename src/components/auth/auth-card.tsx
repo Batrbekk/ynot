@@ -46,8 +46,8 @@ export function AuthCard({
   }
 
   return (
-    <div className="grid w-full md:grid-cols-2">
-      <div className="relative hidden min-h-[640px] md:block">
+    <div className="grid w-full md:grid-cols-2 md:grid-rows-1 md:min-h-[calc(100vh-9rem)]">
+      <div className="relative hidden md:block min-h-[400px]">
         <Image
           src={sideImage.src}
           alt={sideImage.alt}

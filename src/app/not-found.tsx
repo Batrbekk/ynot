@@ -19,7 +19,7 @@ export default function NotFound() {
           <Container size="narrow" className="text-center">
             <p className="font-heading text-[120px] leading-none text-foreground-primary md:text-[180px]">404</p>
             <Display level="md" as="h1" className="mt-4">Page not found</Display>
-            <p className="mt-4 mx-auto max-w-md text-[14px] text-foreground-secondary">
+            <p className="mt-4 mx-auto w-full max-w-[480px] text-[14px] text-foreground-secondary">
               The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
             </p>
             <div className="mt-10">

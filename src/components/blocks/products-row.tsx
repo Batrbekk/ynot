@@ -23,14 +23,9 @@ export function ProductsRow({
   return (
     <Section padding="lg">
       <Container size="wide">
-        <div className="mb-12 flex items-end justify-between gap-6">
-          <Display level="md" as="h2">
-            {title}
-          </Display>
-          <Link href={ctaHref} className="hidden md:inline-block">
-            <Button variant="link">{ctaLabel}</Button>
-          </Link>
-        </div>
+        <Display level="md" as="h2" className="mb-12 text-center">
+          {title}
+        </Display>
 
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8">
           {products.map((p) => (
@@ -46,9 +41,9 @@ export function ProductsRow({
           ))}
         </div>
 
-        <div className="mt-10 flex justify-center md:hidden">
+        <div className="mt-12 flex justify-center">
           <Link href={ctaHref}>
-            <Button variant="outline">{ctaLabel}</Button>
+            <Button>{ctaLabel}</Button>
           </Link>
         </div>
       </Container>
