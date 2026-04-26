@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { ProductCard } from "@/components/product-card";
 import { SiteFooter } from "@/components/site-footer";
@@ -6,10 +9,27 @@ import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Input } from "@/components/ui/input";
 import { Display, Eyebrow } from "@/components/ui/typography";
-
-export const metadata = {
-  title: "UI Kit · YNOT London",
-};
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { QuantityStepper } from "@/components/ui/quantity-stepper";
+import { SizeSelector } from "@/components/ui/size-selector";
+import { ColourSwatch } from "@/components/ui/colour-swatch";
+import { IconButton } from "@/components/ui/icon-button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CardInput } from "@/components/ui/card-input";
+import { Prose } from "@/components/ui/prose";
+import { Grid } from "@/components/ui/grid";
+import { Drawer } from "@/components/ui/drawer";
+import { Modal } from "@/components/ui/modal";
+import { ToastProvider, useToast } from "@/components/ui/toast";
+import { Tabs } from "@/components/ui/tabs";
+import { Accordion } from "@/components/ui/accordion";
+import { WhatsAppWidget } from "@/components/whatsapp-widget";
+import { MenuIcon, BagIcon } from "@/components/icons";
 
 const COLORS = [
   { name: "foreground-primary", value: "#1A1A1A", className: "bg-foreground-primary" },
@@ -35,7 +55,7 @@ const SAMPLE_PRODUCTS = [
   { name: "Notting Cotton Trench", price: "£560", image: "/sample/jacket-4.svg", badge: "pre-order" as const },
 ];
 
-function Section({
+function KitSection({
   title,
   caption,
   children,
@@ -59,7 +79,141 @@ function Section({
   );
 }
 
-export default function UIKitPage() {
+function CheckboxDemo() {
+  const [v, setV] = React.useState(false);
+  return (
+    <div className="flex flex-col gap-4 max-w-sm">
+      <Checkbox
+        label="I agree to the Terms & Conditions"
+        checked={v}
+        onChange={(e) => setV(e.target.checked)}
+      />
+      <Checkbox label="Subscribe to newsletter" defaultChecked />
+      <Checkbox label="Disabled" disabled />
+      <Checkbox label="With error" error="This field is required" />
+    </div>
+  );
+}
+
+function RadioDemo() {
+  const [v, setV] = React.useState("rm");
+  return (
+    <div className="max-w-md">
+      <RadioGroup
+        name="ship"
+        value={v}
+        onChange={setV}
+        options={[
+          { value: "rm", label: "Royal Mail — Free", description: "2–3 business days" },
+          { value: "dhl", label: "DHL Worldwide — Free", description: "8–10 business days" },
+        ]}
+      />
+    </div>
+  );
+}
+
+function SelectDemo() {
+  const [v, setV] = React.useState("GB");
+  return (
+    <div className="max-w-sm">
+      <Select
+        label="Country"
+        value={v}
+        onChange={setV}
+        options={[
+          { value: "GB", label: "United Kingdom" },
+          { value: "US", label: "United States" },
+          { value: "FR", label: "France" },
+          { value: "DE", label: "Germany" },
+        ]}
+      />
+    </div>
+  );
+}
+
+function PhoneDemo() {
+  const [v, setV] = React.useState("");
+  return (
+    <div className="max-w-sm">
+      <PhoneInput label="Phone" value={v} onChange={setV} placeholder="7700 900123" />
+    </div>
+  );
+}
+
+function QtyDemo() {
+  const [v, setV] = React.useState(1);
+  return <QuantityStepper value={v} onChange={setV} max={10} />;
+}
+
+function SizeDemo() {
+  const [v, setV] = React.useState<"S" | "M" | "L">("M");
+  return (
+    <SizeSelector
+      sizes={["S", "M", "L"]}
+      value={v}
+      onChange={(s) => setV(s as "S" | "M" | "L")}
+      stock={{ S: 0, M: 3, L: 1 }}
+    />
+  );
+}
+
+function CardDemo() {
+  const [v, setV] = React.useState({ number: "", expiry: "", cvc: "" });
+  return (
+    <div className="max-w-md">
+      <CardInput value={v} onChange={setV} />
+    </div>
+  );
+}
+
+function DrawerDemo() {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Open right drawer
+      </Button>
+      <Drawer open={open} onClose={() => setOpen(false)} side="right" title="Cart">
+        <div className="p-5">Drawer content goes here.</div>
+      </Drawer>
+    </>
+  );
+}
+
+function ModalDemo() {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Open modal
+      </Button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Confirm">
+        <p className="text-[14px] text-foreground-secondary">
+          Are you sure you want to delete this address?
+        </p>
+        <div className="mt-6 flex gap-3 justify-end">
+          <Button variant="outline" onClick={() => setOpen(false)} size="md">
+            Cancel
+          </Button>
+          <Button onClick={() => setOpen(false)} size="md">
+            Confirm
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+function ToastDemo() {
+  const { show } = useToast();
+  return (
+    <Button variant="outline" onClick={() => show("Promo code applied")}>
+      Show toast
+    </Button>
+  );
+}
+
+function UIKitPage() {
   return (
     <>
       <AnnouncementBar />
@@ -77,7 +231,7 @@ export default function UIKitPage() {
             typography before composing screens.
           </p>
 
-          <Section
+          <KitSection
             title="Typography"
             caption="Playfair Display for editorial headings, Inter for body and UI."
           >
@@ -104,9 +258,9 @@ export default function UIKitPage() {
               </p>
               <Eyebrow>Eyebrow / label · 11px · 0.25em tracking</Eyebrow>
             </div>
-          </Section>
+          </KitSection>
 
-          <Section title="Colour tokens" caption="Reference values mirror ynot.pen.">
+          <KitSection title="Colour tokens" caption="Reference values mirror ynot.pen.">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {COLORS.map((c) => (
                 <div key={c.name} className="flex flex-col gap-2">
@@ -122,9 +276,9 @@ export default function UIKitPage() {
                 </div>
               ))}
             </div>
-          </Section>
+          </KitSection>
 
-          <Section
+          <KitSection
             title="Buttons"
             caption="Primary CTA matches checkout, hero, sign-in actions. 52px desktop / 48px tablet / 44px small."
           >
@@ -151,9 +305,9 @@ export default function UIKitPage() {
                 </Button>
               </div>
             </div>
-          </Section>
+          </KitSection>
 
-          <Section
+          <KitSection
             title="Form fields"
             caption="Inline labels with bottom border, used in checkout and account flows."
           >
@@ -171,9 +325,9 @@ export default function UIKitPage() {
                 error="This code has expired."
               />
             </div>
-          </Section>
+          </KitSection>
 
-          <Section
+          <KitSection
             title="Product cards"
             caption="Grid card used in collection pages, new arrivals and recommendations."
           >
@@ -189,9 +343,9 @@ export default function UIKitPage() {
                 />
               ))}
             </div>
-          </Section>
+          </KitSection>
 
-          <Section
+          <KitSection
             title="Brand block"
             caption="Centred editorial statement used on the homepage between hero and grid."
           >
@@ -203,11 +357,214 @@ export default function UIKitPage() {
                 Why not is not a question. It&apos;s how she lives.
               </p>
             </div>
-          </Section>
+          </KitSection>
+
+          <KitSection
+            title="New form primitives"
+            caption="Form inputs added in Phase 1."
+          >
+            <div className="grid gap-12 md:grid-cols-2">
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Checkbox
+                </h4>
+                <CheckboxDemo />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  RadioGroup
+                </h4>
+                <RadioDemo />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Select
+                </h4>
+                <SelectDemo />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Textarea
+                </h4>
+                <Textarea label="Reason for return" placeholder="Tell us why" />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  PasswordInput
+                </h4>
+                <PasswordInput label="Password" placeholder="••••••••" />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  PhoneInput
+                </h4>
+                <PhoneDemo />
+              </div>
+            </div>
+          </KitSection>
+
+          <KitSection
+            title="Commerce primitives"
+            caption="QuantityStepper, SizeSelector, ColourSwatch, CardInput."
+          >
+            <div className="grid gap-12 md:grid-cols-2">
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  QuantityStepper
+                </h4>
+                <QtyDemo />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  SizeSelector
+                </h4>
+                <SizeDemo />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  ColourSwatch
+                </h4>
+                <div className="flex gap-3">
+                  <ColourSwatch name="Chocolate Brown" hex="#3D3428" selected />
+                  <ColourSwatch name="Cream" hex="#F5F0EB" />
+                  <ColourSwatch name="Black" hex="#1A1A1A" />
+                </div>
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  CardInput (stub)
+                </h4>
+                <CardDemo />
+              </div>
+            </div>
+          </KitSection>
+
+          <KitSection
+            title="Layout primitives"
+            caption="Section, Grid, Skeleton, IconButton, WhatsAppWidget, Prose."
+          >
+            <div className="space-y-12">
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  IconButton
+                </h4>
+                <div className="flex gap-2">
+                  <IconButton aria-label="Open menu">
+                    <MenuIcon />
+                  </IconButton>
+                  <IconButton aria-label="Open bag">
+                    <BagIcon />
+                  </IconButton>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Skeleton
+                </h4>
+                <div className="space-y-2 max-w-sm">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-32 w-full" />
+                </div>
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Grid (4-col / 2-col mobile)
+                </h4>
+                <Grid cols={4} mobileCols={2}>
+                  {[1, 2, 3, 4].map((n) => (
+                    <div
+                      key={n}
+                      className="aspect-square bg-surface-secondary flex items-center justify-center"
+                    >
+                      {n}
+                    </div>
+                  ))}
+                </Grid>
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Prose
+                </h4>
+                <Prose>
+                  <h2>Heading two</h2>
+                  <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Suspendisse euismod, leo nec consectetur ornare.
+                  </p>
+                  <ul>
+                    <li>List item one</li>
+                    <li>List item two</li>
+                  </ul>
+                </Prose>
+              </div>
+            </div>
+          </KitSection>
+
+          <KitSection title="Overlays" caption="Drawer, Modal, Toast — try them out.">
+            <div className="flex flex-wrap gap-4">
+              <DrawerDemo />
+              <ModalDemo />
+              <ToastDemo />
+            </div>
+          </KitSection>
+
+          <KitSection title="Tabs and Accordion">
+            <div className="grid gap-12 md:grid-cols-2">
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Tabs
+                </h4>
+                <Tabs
+                  items={[
+                    {
+                      value: "delivery",
+                      label: "Delivery",
+                      content: (
+                        <p className="text-[14px]">
+                          UK 2–3 days · Worldwide 8–10 days. All free.
+                        </p>
+                      ),
+                    },
+                    {
+                      value: "returns",
+                      label: "Returns",
+                      content: (
+                        <p className="text-[14px]">
+                          14 days unworn, free returns.
+                        </p>
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+              <div>
+                <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
+                  Accordion
+                </h4>
+                <Accordion
+                  items={[
+                    { value: "desc", title: "Description", content: "A timeless field jacket." },
+                    { value: "mat", title: "Materials", content: "100% Italian suede." },
+                    { value: "care", title: "Care", content: "Dry clean only." },
+                  ]}
+                />
+              </div>
+            </div>
+          </KitSection>
         </Container>
       </main>
 
       <SiteFooter />
     </>
+  );
+}
+
+export default function UIKitPageWrapper() {
+  return (
+    <ToastProvider>
+      <UIKitPage />
+      <WhatsAppWidget phone="+44 7000 000000" message="Hi YNOT, I have a question." />
+    </ToastProvider>
   );
 }
