@@ -16,10 +16,40 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://ynotlondon.com";
+
 export const metadata: Metadata = {
-  title: "YNOT London",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "YNOT London",
+    template: "%s · YNOT London",
+  },
   description:
     "Urban outerwear, built to endure. Designed to be relied on. Premium women's outerwear from London.",
+  openGraph: {
+    type: "website",
+    siteName: "YNOT London",
+    title: "YNOT London",
+    description: "Urban outerwear, built to endure. Designed to be relied on.",
+    url: SITE_URL,
+    images: [
+      {
+        url: "/cms/hero.jpg",
+        width: 1200,
+        height: 630,
+        alt: "YNOT London — Premium Outerwear",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "YNOT London",
+    description: "Urban outerwear, built to endure. Designed to be relied on.",
+    images: ["/cms/hero.jpg"],
+  },
+  robots: { index: true, follow: true },
+  icons: { icon: "/favicon.ico" },
 };
 
 export default async function RootLayout({
