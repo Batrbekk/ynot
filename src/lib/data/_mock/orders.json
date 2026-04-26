@@ -1,0 +1,34 @@
+[
+  {
+    "id": "YNT-2847",
+    "createdAt": "2026-03-28T11:23:00Z",
+    "status": "delivered",
+    "items": [
+      { "productId": "prod_001", "slug": "belted-suede-field-jacket", "name": "Belted Suede Field Jacket", "image": "/sample/jacket-1.svg", "colour": "Chocolate Brown", "size": "M", "unitPrice": 89500, "quantity": 1, "preOrder": false }
+    ],
+    "subtotal": 89500,
+    "shipping": 0,
+    "total": 89500,
+    "currency": "GBP",
+    "carrier": "royal-mail",
+    "trackingNumber": "RM12345678GB",
+    "shippingAddress": { "firstName": "Jane", "lastName": "Doe", "line1": "42 King's Road", "line2": null, "city": "London", "postcode": "SW3 4ND", "country": "GB", "phone": "+44 7700 900123" },
+    "estimatedDeliveryDate": "2026-04-01"
+  },
+  {
+    "id": "YNT-2831",
+    "createdAt": "2026-03-15T14:50:00Z",
+    "status": "shipped",
+    "items": [
+      { "productId": "prod_006", "slug": "the-chelsea-jacket", "name": "The Chelsea Jacket", "image": "/sample/jacket-3.svg", "colour": "Navy", "size": "S", "unitPrice": 69500, "quantity": 1, "preOrder": false }
+    ],
+    "subtotal": 69500,
+    "shipping": 0,
+    "total": 69500,
+    "currency": "GBP",
+    "carrier": "royal-mail",
+    "trackingNumber": "RM98765432GB",
+    "shippingAddress": { "firstName": "Jane", "lastName": "Doe", "line1": "42 King's Road", "line2": null, "city": "London", "postcode": "SW3 4ND", "country": "GB", "phone": "+44 7700 900123" },
+    "estimatedDeliveryDate": "2026-03-19"
+  }
+]

@@ -30,6 +30,16 @@ describe("OrderStatusSchema", () => {
   });
 });
 
+import ordersFixture from "../../data/_mock/orders.json";
+
+describe("Orders mock data", () => {
+  it("validates every order", () => {
+    for (const o of ordersFixture) {
+      expect(() => OrderSchema.parse(o)).not.toThrow();
+    }
+  });
+});
+
 describe("OrderSchema", () => {
   it("accepts a full order", () => {
     expect(() =>
