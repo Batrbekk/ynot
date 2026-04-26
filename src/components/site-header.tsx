@@ -4,6 +4,8 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { useCartStore } from "@/lib/stores/cart-store";
+import { useUIStore } from "@/lib/stores/ui-store";
 import {
   AccountIcon,
   BagIcon,
@@ -20,11 +22,14 @@ export interface SiteHeaderProps {
    * after the user scrolls past the hero.
    */
   overHero?: boolean;
-  cartCount?: number;
 }
 
-export function SiteHeader({ overHero = false, cartCount = 0 }: SiteHeaderProps) {
+export function SiteHeader({ overHero = false }: SiteHeaderProps) {
   const [scrolled, setScrolled] = React.useState(false);
+  const itemCount = useCartStore((s) => s.itemCount());
+  const openCart = useCartStore((s) => s.openDrawer);
+  const openMenu = useUIStore((s) => s.openMenu);
+  const openSearch = useUIStore((s) => s.openSearch);
 
   React.useEffect(() => {
     if (!overHero) return;
@@ -50,6 +55,7 @@ export function SiteHeader({ overHero = false, cartCount = 0 }: SiteHeaderProps)
           <button
             type="button"
             aria-label="Open menu"
+            onClick={openMenu}
             className="-ml-2 flex h-10 w-10 items-center justify-center"
           >
             <MenuIcon />
@@ -57,7 +63,11 @@ export function SiteHeader({ overHero = false, cartCount = 0 }: SiteHeaderProps)
         </div>
 
         <div className="flex items-center justify-center">
-          <Link href="/" aria-label="YNOT London" className="relative block h-8 w-[56px] md:h-9 md:w-[64px]">
+          <Link
+            href="/"
+            aria-label="YNOT London"
+            className="relative block h-8 w-[56px] md:h-9 md:w-[64px]"
+          >
             <Image
               src={logoWhite}
               alt=""
@@ -87,6 +97,7 @@ export function SiteHeader({ overHero = false, cartCount = 0 }: SiteHeaderProps)
           <button
             type="button"
             aria-label="Search"
+            onClick={openSearch}
             className="hidden h-10 w-10 items-center justify-center md:flex"
           >
             <SearchIcon />
@@ -100,13 +111,14 @@ export function SiteHeader({ overHero = false, cartCount = 0 }: SiteHeaderProps)
           </Link>
           <button
             type="button"
-            aria-label={`Cart, ${cartCount} items`}
+            aria-label={`Cart, ${itemCount} items`}
+            onClick={openCart}
             className="relative -mr-2 flex h-10 w-10 items-center justify-center"
           >
             <BagIcon />
-            {cartCount > 0 && (
+            {itemCount > 0 && (
               <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground-primary px-1 text-[10px] font-semibold text-foreground-inverse">
-                {cartCount}
+                {itemCount}
               </span>
             )}
           </button>
