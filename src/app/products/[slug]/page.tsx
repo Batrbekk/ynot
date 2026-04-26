@@ -13,6 +13,7 @@ import { ProductDetailsAccordion } from "@/components/pdp/product-details-accord
 import { RecommendedProducts } from "@/components/pdp/recommended-products";
 import { getProductBySlug, getRecommendations } from "@/lib/data/products";
 import { getCategoryBySlug } from "@/lib/data/categories";
+import { buildProductJsonLd } from "@/lib/seo/product-jsonld";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -39,8 +40,17 @@ export default async function ProductPage({ params }: PageProps) {
     ? await getCategoryBySlug(primaryCategorySlug)
     : null;
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://ynotlondon.com";
+  const jsonLd = buildProductJsonLd(product, baseUrl);
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <AnnouncementBar />
       <SiteHeader />
 
