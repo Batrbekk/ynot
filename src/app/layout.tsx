@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SiteOverlays } from "@/components/site-overlays";
+import { CookieBanner } from "@/components/cookie-banner";
 import { getAllCategories } from "@/lib/data/categories";
 
 const inter = Inter({
@@ -71,6 +72,7 @@ export default async function RootLayout({
       <body className="min-h-screen bg-surface-primary text-foreground-primary font-body">
         {children}
         <SiteOverlays categories={menuCategories} />
+        <CookieBanner />
       </body>
     </html>
   );
