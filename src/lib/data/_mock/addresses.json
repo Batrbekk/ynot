@@ -1,0 +1,32 @@
+[
+  {
+    "id": "addr_001",
+    "label": "Home",
+    "isDefault": true,
+    "address": {
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "line1": "42 King's Road",
+      "line2": null,
+      "city": "London",
+      "postcode": "SW3 4ND",
+      "country": "GB",
+      "phone": "+44 7700 900123"
+    }
+  },
+  {
+    "id": "addr_002",
+    "label": "Work",
+    "isDefault": false,
+    "address": {
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "line1": "15 Portobello Road",
+      "line2": null,
+      "city": "London",
+      "postcode": "W11 3DA",
+      "country": "GB",
+      "phone": "+44 7700 900123"
+    }
+  }
+]
