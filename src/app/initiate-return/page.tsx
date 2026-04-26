@@ -30,23 +30,23 @@ function InitiateReturnInner() {
   const toggleItem = useReturnsStubStore((s) => s.toggleItem);
   const setReason = useReturnsStubStore((s) => s.setReason);
 
-  const [order, setOrderObj] = React.useState<Order | null>(null);
+  const [fetchedOrder, setFetchedOrder] = React.useState<Order | null>(null);
   const [findError, setFindError] = React.useState<string | undefined>();
   const [contactEmail, setContactEmail] = React.useState("");
 
   React.useEffect(() => {
-    if (!orderId) {
-      setOrderObj(null);
-      return;
-    }
+    if (!orderId) return;
     let active = true;
     getOrderById(orderId).then((o) => {
-      if (active) setOrderObj(o);
+      if (active) setFetchedOrder(o);
     });
     return () => {
       active = false;
     };
   }, [orderId]);
+
+  // Derived: only treat fetchedOrder as current when its id matches the store
+  const order = fetchedOrder && fetchedOrder.id === orderId ? fetchedOrder : null;
 
   const handleFind = async (orderNumber: string, contact: string) => {
     const found = await getOrderById(orderNumber);
