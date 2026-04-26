@@ -24,19 +24,18 @@ export interface SiteHeaderProps {
   overHero?: boolean;
 }
 
-/** Returns a 0..1 progress that grows as the user scrolls down the first 70% of viewport height. */
+/** Returns a 0..1 progress that grows as the user scrolls down the first 70% of viewport height.
+ *  When `active` is false (e.g. header on a page without a hero), the hook returns 1 — the
+ *  fully-solid header state — without touching state inside an effect. */
 function useScrollProgress(active: boolean): number {
-  const [progress, setProgress] = React.useState(0);
+  const [scrollValue, setScrollValue] = React.useState(0);
   React.useEffect(() => {
-    if (!active) {
-      setProgress(1);
-      return;
-    }
+    if (!active) return;
     let raf = 0;
     const compute = () => {
       const range = window.innerHeight * 0.7;
       const next = Math.min(1, Math.max(0, window.scrollY / range));
-      setProgress(next);
+      setScrollValue(next);
     };
     const onScroll = () => {
       cancelAnimationFrame(raf);
@@ -49,7 +48,7 @@ function useScrollProgress(active: boolean): number {
       window.removeEventListener("scroll", onScroll);
     };
   }, [active]);
-  return progress;
+  return active ? scrollValue : 1;
 }
 
 /** Linear interpolation between two channel values. */
