@@ -1,0 +1,54 @@
+import * as React from "react";
+import { cn } from "@/lib/cn";
+import type { Size } from "@/lib/schemas";
+
+export interface SizeSelectorProps {
+  sizes: Size[];
+  value: Size | null;
+  onChange: (size: Size) => void;
+  stock: Partial<Record<Size, number>>;
+  /** When true, sold-out sizes are still selectable (used for pre-order) */
+  allowSoldOut?: boolean;
+  className?: string;
+}
+
+export function SizeSelector({
+  sizes,
+  value,
+  onChange,
+  stock,
+  allowSoldOut = false,
+  className,
+}: SizeSelectorProps) {
+  return (
+    <div className={cn("flex flex-wrap gap-2", className)}>
+      {sizes.map((s) => {
+        const inStock = (stock[s] ?? 0) > 0;
+        const disabled = !inStock && !allowSoldOut;
+        const selected = value === s;
+        return (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onChange(s)}
+            disabled={disabled}
+            aria-label={`Size ${s}${selected ? ", selected" : ""}${
+              !inStock ? ", out of stock" : ""
+            }`}
+            aria-pressed={selected}
+            className={cn(
+              "h-11 min-w-11 px-3 border text-[13px] font-medium",
+              "transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground-primary",
+              selected
+                ? "border-foreground-primary bg-foreground-primary text-foreground-inverse"
+                : "border-border-dark bg-surface-primary text-foreground-primary hover:border-foreground-primary",
+              disabled && "opacity-30 line-through cursor-not-allowed hover:border-border-dark",
+            )}
+          >
+            {s}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
