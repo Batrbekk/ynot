@@ -1,0 +1,54 @@
+{
+  "announcement": {
+    "messages": [
+      "Sign in and get 10% off your first order",
+      "Free UK shipping"
+    ]
+  },
+  "hero": {
+    "kind": "image",
+    "image": "/sample/jacket-1.svg",
+    "videoUrl": null,
+    "eyebrow": "New Collection",
+    "ctaLabel": "SHOP",
+    "ctaHref": "/collection/jackets"
+  },
+  "staticPages": [
+    {
+      "slug": "our-story",
+      "title": "Our Story",
+      "bodyMarkdown": "# Why Not?\n\nYNOT London was born from a simple belief: that outerwear should be as resilient as the women who wear it. Our name carries a quiet philosophy — why not live boldly, dress intentionally, and choose pieces that endure.\n\n## What we stand for\n\n- Timeless design — pieces that transcend seasons\n- Premium materials — leather, suede, wool, cotton, Tencel\n- Sustainability — 0% leather waste, responsible sourcing\n- London & Istanbul — designed in London, made between London and Istanbul\n",
+      "meta": { "title": "Our Story · YNOT London", "description": "The YNOT London story." }
+    },
+    {
+      "slug": "product-care",
+      "title": "Product Care",
+      "bodyMarkdown": "# Product Care\n\nKeep your YNOT pieces looking their best with these care instructions.\n\nSelect a material to view detailed guidance.\n",
+      "meta": { "title": "Product Care · YNOT London", "description": "Care instructions for leather, suede, wool, shearling, and cotton." }
+    },
+    {
+      "slug": "sustainability",
+      "title": "Sustainability & Animal Welfare",
+      "bodyMarkdown": "# Sustainability\n\nAt YNOT London, sustainability isn't a trend — it's a responsibility.\n",
+      "meta": { "title": "Sustainability · YNOT London", "description": "Our approach to sustainability and animal welfare." }
+    },
+    {
+      "slug": "shipping-returns",
+      "title": "Shipping & Returns",
+      "bodyMarkdown": "# Shipping & Returns\n\nDelivery is free worldwide.\n",
+      "meta": { "title": "Shipping & Returns · YNOT London", "description": "Shipping and returns policy." }
+    },
+    {
+      "slug": "privacy",
+      "title": "Privacy Policy",
+      "bodyMarkdown": "# Privacy Policy\n\nThis policy describes how YNOT London handles your personal data.\n",
+      "meta": { "title": "Privacy Policy · YNOT London", "description": "How we handle your data." }
+    },
+    {
+      "slug": "contact",
+      "title": "Contact",
+      "bodyMarkdown": "# Contact\n\nReach us at hello@ynotlondon.com\n",
+      "meta": { "title": "Contact · YNOT London", "description": "Get in touch with YNOT London." }
+    }
+  ]
+}

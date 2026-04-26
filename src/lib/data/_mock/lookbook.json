@@ -1,0 +1,8 @@
+{
+  "images": [
+    { "src": "/sample/jacket-1.svg", "alt": "Lookbook image — leather jacket", "productSlug": "leather-biker-jacket" },
+    { "src": "/sample/jacket-2.svg", "alt": "Lookbook image — suede field jacket", "productSlug": "belted-suede-field-jacket" },
+    { "src": "/sample/jacket-3.svg", "alt": "Lookbook image — wool trench", "productSlug": "wool-trench-coat" },
+    { "src": "/sample/jacket-4.svg", "alt": "Lookbook image — cotton parka", "productSlug": null }
+  ]
+}

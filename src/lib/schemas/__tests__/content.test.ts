@@ -42,3 +42,27 @@ describe("StaticPageSchema", () => {
     ).not.toThrow();
   });
 });
+
+import contentFixture from "../../data/_mock/content.json";
+import lookbookFixture from "../../data/_mock/lookbook.json";
+
+describe("Mock content fixtures", () => {
+  it("announcement parses", () => {
+    expect(() => AnnouncementBlockSchema.parse(contentFixture.announcement)).not.toThrow();
+  });
+  it("hero parses", () => {
+    expect(() => HeroBlockSchema.parse(contentFixture.hero)).not.toThrow();
+  });
+  it("every static page parses", () => {
+    for (const page of contentFixture.staticPages) {
+      expect(() => StaticPageSchema.parse(page)).not.toThrow();
+    }
+  });
+});
+
+import { LookbookSchema } from "../content";
+describe("Lookbook fixture", () => {
+  it("parses", () => {
+    expect(() => LookbookSchema.parse(lookbookFixture)).not.toThrow();
+  });
+});
