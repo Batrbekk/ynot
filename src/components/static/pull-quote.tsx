@@ -7,7 +7,7 @@ export interface PullQuoteProps {
 
 export function PullQuote({ quote, attribution }: PullQuoteProps) {
   return (
-    <blockquote className="mx-auto max-w-3xl text-center px-6">
+    <blockquote className="mx-auto max-w-[768px] text-center px-6">
       <p className="font-heading text-[28px] leading-snug text-foreground-primary md:text-[36px]">
         “{quote}”
       </p>

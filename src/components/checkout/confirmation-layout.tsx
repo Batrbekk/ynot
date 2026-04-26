@@ -14,7 +14,7 @@ export function ConfirmationLayout({ order }: { order: Order }) {
         <p className="mt-3 text-[13px] uppercase tracking-[0.2em] text-foreground-secondary">
           Order #{order.id}
         </p>
-        <p className="mt-3 max-w-md text-[14px] text-foreground-secondary">
+        <p className="mt-3 max-w-[448px] text-[14px] text-foreground-secondary">
           A confirmation email has been sent to your email address. We&rsquo;ll let you know when your order ships.
         </p>
       </div>

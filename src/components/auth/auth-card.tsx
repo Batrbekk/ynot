@@ -23,8 +23,8 @@ export function AuthCard({
   sideImage,
 }: AuthCardProps) {
   const formColumn = (
-    <div className="mx-auto w-full max-w-[440px] px-6 py-16 md:py-24">
-      <div className="text-center mb-10">
+    <div className="mx-auto w-full max-w-[440px] px-6 py-10 md:py-16">
+      <div className="text-center mb-8">
         <Display level="md" as="h1">
           {title}
         </Display>
@@ -42,12 +42,14 @@ export function AuthCard({
   );
 
   if (!sideImage) {
-    return formColumn;
+    return (
+      <div className="flex flex-1 items-center justify-center">{formColumn}</div>
+    );
   }
 
   return (
-    <div className="grid w-full md:grid-cols-2 md:grid-rows-1 md:min-h-[calc(100vh-9rem)]">
-      <div className="relative hidden md:block min-h-[400px]">
+    <div className="grid flex-1 w-full md:grid-cols-2 md:grid-rows-1 overflow-hidden">
+      <div className="relative hidden md:block">
         <Image
           src={sideImage.src}
           alt={sideImage.alt}
@@ -57,7 +59,9 @@ export function AuthCard({
           priority
         />
       </div>
-      <div className="flex items-center justify-center">{formColumn}</div>
+      <div className="flex items-center justify-center overflow-y-auto">
+        {formColumn}
+      </div>
     </div>
   );
 }

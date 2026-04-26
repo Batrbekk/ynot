@@ -18,7 +18,7 @@ export const metadata = {
 const VALUES = [
   { title: "Timeless design", body: "Pieces designed to transcend seasons and trends — wardrobe foundations rather than fast fashion." },
   { title: "Premium materials", body: "Leather, suede, wool, cotton and Tencel — sourced with integrity from heritage suppliers." },
-  { title: "Sustainability", body: "0% leather waste in production. Responsible sourcing practices throughout the supply chain." },
+  { title: "Sustainability", body: "0% leather waste in production. Ethically sourced throughout the supply chain." },
   { title: "London & Istanbul", body: "Designed in our London studio. Made by skilled craftspeople between London and Istanbul." },
 ];
 
@@ -30,7 +30,7 @@ export default function OurStoryPage() {
       <main className="flex-1">
         <PageHero
           eyebrow="Our Story"
-          title="Why Not?"
+          title="YNOT London"
           image="/cms/our-story/hero.jpg"
         />
 
@@ -59,7 +59,7 @@ export default function OurStoryPage() {
         <Section padding="lg">
           <Container size="wide">
             <PullQuote
-              quote="Urban outerwear, built to endure. Designed to be relied on."
+              quote="Urban outerwear, built to endure."
               attribution="YNOT London"
             />
           </Container>

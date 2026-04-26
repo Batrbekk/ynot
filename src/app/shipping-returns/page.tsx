@@ -15,7 +15,7 @@ import { ShippingTable } from "@/components/static/shipping-table";
 
 const ROWS = [
   { destination: "United Kingdom", time: "2–3 business days", carrier: "Royal Mail", cost: "Free" },
-  { destination: "Worldwide", time: "8–10 business days", carrier: "DHL", cost: "Free" },
+  { destination: "Worldwide", time: "8–10 business days", carrier: "DHL", cost: "Calculated at checkout" },
 ];
 
 const RETURN_BULLETS = [
@@ -23,6 +23,7 @@ const RETURN_BULLETS = [
   "All original tags and packaging must be intact",
   "Items must be unworn and in original condition",
   "Refunds are processed within 5–7 business days",
+  "If the item was pre-ordered, allow an extra 3 weeks for it to be delivered",
 ];
 
 export default function ShippingReturnsPage() {
@@ -31,7 +32,7 @@ export default function ShippingReturnsPage() {
       <AnnouncementBar />
       <SiteHeader />
       <main className="flex-1">
-        <PageHero eyebrow="Shipping & Returns" title="Free shipping. Easy returns." />
+        <PageHero eyebrow="Shipping & Returns" title="Easy returns within 14 days." />
 
         <Section padding="lg">
           <Container size="wide">
@@ -43,7 +44,7 @@ export default function ShippingReturnsPage() {
                   content: (
                     <div className="flex flex-col gap-8">
                       <p className="text-[15px] text-foreground-primary max-w-[640px]">
-                        We offer free shipping worldwide. Orders are dispatched from our London warehouse within 1–2 business days.
+                        UK shipping is free via Royal Mail. Worldwide DHL is charged at standard rates calculated at checkout. Orders are dispatched from our London warehouse within 1–2 business days.
                       </p>
                       <ShippingTable rows={ROWS} />
                     </div>

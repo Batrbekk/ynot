@@ -30,7 +30,7 @@ export function CategoryHeader({
             {title}
           </Display>
           {description && (
-            <p className="mt-3 max-w-md text-[14px]">{description}</p>
+            <p className="mt-3 max-w-[448px] text-[14px]">{description}</p>
           )}
         </div>
       </header>

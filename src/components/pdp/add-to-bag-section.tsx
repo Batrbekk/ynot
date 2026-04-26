@@ -91,8 +91,14 @@ export function AddToBagSection({ product }: AddToBagSectionProps) {
         />
       </div>
 
-      <Button size="lg" fullWidth onClick={onAdd} disabled={!size}>
-        {isPreOrderForSelection ? "Pre-order (3 weeks)" : "Add to bag"}
+      <Button
+        size="lg"
+        fullWidth
+        variant={isPreOrderForSelection ? "preorder" : "primary"}
+        onClick={onAdd}
+        disabled={!size}
+      >
+        {isPreOrderForSelection ? "Pre-order (3-4 weeks)" : "Add to bag"}
       </Button>
     </div>
   );

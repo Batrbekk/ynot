@@ -23,8 +23,8 @@ export function ShippingMethodPicker({ value, onChange }: ShippingMethodPickerPr
         },
         {
           value: "dhl",
-          label: "DHL Worldwide — Free",
-          description: "8–10 business days",
+          label: "DHL Worldwide",
+          description: "8–10 business days · Calculated at checkout",
         },
       ]}
     />

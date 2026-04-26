@@ -38,7 +38,7 @@ export function EditorialOverlay({
         <Display level="lg" as="h2" className="text-foreground-inverse">
           {title}
         </Display>
-        <p className="mt-6 max-w-md text-[14px] leading-relaxed text-foreground-inverse/90 md:text-[15px]">
+        <p className="mt-6 max-w-[448px] text-[14px] leading-relaxed text-foreground-inverse/90 md:text-[15px]">
           {body}
         </p>
         {ctaHref && ctaLabel && (

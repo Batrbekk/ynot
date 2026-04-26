@@ -57,7 +57,7 @@ export function CartDrawer() {
                     </p>
                     {item.preOrder && (
                       <p className="text-[11px] uppercase tracking-[0.15em] text-accent-warm mt-1">
-                        Pre-order · 3 weeks
+                        Pre-order · 3-4 weeks
                       </p>
                     )}
                   </div>

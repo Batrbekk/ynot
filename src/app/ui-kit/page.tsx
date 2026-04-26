@@ -69,7 +69,7 @@ function KitSection({
       <div className="mb-10 flex flex-col gap-2">
         <Eyebrow>{title}</Eyebrow>
         {caption && (
-          <p className="max-w-prose text-[14px] text-foreground-secondary">
+          <p className="max-w-[65ch] text-[14px] text-foreground-secondary">
             {caption}
           </p>
         )}
@@ -82,7 +82,7 @@ function KitSection({
 function CheckboxDemo() {
   const [v, setV] = React.useState(false);
   return (
-    <div className="flex flex-col gap-4 max-w-sm">
+    <div className="flex flex-col gap-4 max-w-[384px]">
       <Checkbox
         label="I agree to the Terms & Conditions"
         checked={v}
@@ -98,14 +98,14 @@ function CheckboxDemo() {
 function RadioDemo() {
   const [v, setV] = React.useState("rm");
   return (
-    <div className="max-w-md">
+    <div className="max-w-[448px]">
       <RadioGroup
         name="ship"
         value={v}
         onChange={setV}
         options={[
           { value: "rm", label: "Royal Mail — Free", description: "2–3 business days" },
-          { value: "dhl", label: "DHL Worldwide — Free", description: "8–10 business days" },
+          { value: "dhl", label: "DHL Worldwide", description: "8–10 business days" },
         ]}
       />
     </div>
@@ -115,7 +115,7 @@ function RadioDemo() {
 function SelectDemo() {
   const [v, setV] = React.useState("GB");
   return (
-    <div className="max-w-sm">
+    <div className="max-w-[384px]">
       <Select
         label="Country"
         value={v}
@@ -134,7 +134,7 @@ function SelectDemo() {
 function PhoneDemo() {
   const [v, setV] = React.useState("");
   return (
-    <div className="max-w-sm">
+    <div className="max-w-[384px]">
       <PhoneInput label="Phone" value={v} onChange={setV} placeholder="7700 900123" />
     </div>
   );
@@ -160,7 +160,7 @@ function SizeDemo() {
 function CardDemo() {
   const [v, setV] = React.useState({ number: "", expiry: "", cvc: "" });
   return (
-    <div className="max-w-md">
+    <div className="max-w-[448px]">
       <CardInput value={v} onChange={setV} />
     </div>
   );
@@ -225,7 +225,7 @@ function UIKitPage() {
           <Display level="lg" as="h1" className="mt-4">
             UI kit
           </Display>
-          <p className="mt-4 max-w-prose text-[15px] text-foreground-secondary">
+          <p className="mt-4 max-w-[65ch] text-[15px] text-foreground-secondary">
             Every primitive used across the site, sourced from the YNOT Pencil
             design tokens. Use this page to verify spacing, colour and
             typography before composing screens.
@@ -248,11 +248,11 @@ function UIKitPage() {
               <Display level="sm" as="p">
                 Why not is not a question. It&apos;s how she lives.
               </Display>
-              <p className="text-[15px] leading-relaxed text-foreground-primary max-w-prose">
+              <p className="text-[15px] leading-relaxed text-foreground-primary max-w-[65ch]">
                 Body copy — Inter regular at 15px / 1.6 line height. Used for
                 product descriptions, static pages and anything narrative.
               </p>
-              <p className="text-[13px] leading-relaxed text-foreground-secondary max-w-prose">
+              <p className="text-[13px] leading-relaxed text-foreground-secondary max-w-[65ch]">
                 Secondary body — 13px Inter, used for metadata, captions and
                 supporting text alongside primary copy.
               </p>
@@ -293,7 +293,7 @@ function UIKitPage() {
                 <Button variant="ghost">Forgot password</Button>
                 <Button variant="link">Initiate a return</Button>
               </div>
-              <div className="max-w-sm">
+              <div className="max-w-[384px]">
                 <Button fullWidth size="lg">
                   Add to bag
                 </Button>
@@ -311,7 +311,7 @@ function UIKitPage() {
             title="Form fields"
             caption="Inline labels with bottom border, used in checkout and account flows."
           >
-            <div className="grid max-w-2xl gap-8 md:grid-cols-2">
+            <div className="grid max-w-[672px] gap-8 md:grid-cols-2">
               <Input label="Email" type="email" placeholder="you@example.com" />
               <Input label="Password" type="password" placeholder="••••••••" />
               <Input
@@ -350,10 +350,10 @@ function UIKitPage() {
             caption="Centred editorial statement used on the homepage between hero and grid."
           >
             <div className="bg-surface-secondary px-6 py-24 text-center">
-              <Display level="md" as="p" className="mx-auto max-w-3xl text-foreground-on-cream">
+              <Display level="md" as="p" className="mx-auto max-w-[768px] text-foreground-on-cream">
                 Urban outerwear, built to endure. Designed to be relied on.
               </Display>
-              <p className="mx-auto mt-6 max-w-xl text-[14px] uppercase tracking-[0.25em] text-foreground-on-cream">
+              <p className="mx-auto mt-6 max-w-[576px] text-[14px] uppercase tracking-[0.25em] text-foreground-on-cream">
                 Why not is not a question. It&apos;s how she lives.
               </p>
             </div>
@@ -461,7 +461,7 @@ function UIKitPage() {
                 <h4 className="text-[12px] uppercase tracking-[0.2em] text-foreground-secondary mb-4">
                   Skeleton
                 </h4>
-                <div className="space-y-2 max-w-sm">
+                <div className="space-y-2 max-w-[384px]">
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
                   <Skeleton className="h-32 w-full" />

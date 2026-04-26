@@ -19,7 +19,7 @@ export function PageHero({ eyebrow, title, description, image }: PageHeroProps) 
           {eyebrow && <Eyebrow className="text-foreground-inverse mb-4">{eyebrow}</Eyebrow>}
           <Display level="lg" as="h1">{title}</Display>
           {description && (
-            <p className="mt-4 max-w-md text-[14px] leading-relaxed">{description}</p>
+            <p className="mt-4 max-w-[448px] text-[14px] leading-relaxed">{description}</p>
           )}
         </div>
       </header>

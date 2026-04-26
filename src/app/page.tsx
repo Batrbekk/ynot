@@ -30,7 +30,7 @@ export default async function Home() {
       <main className="flex-1">
         <HeroSection hero={hero} />
         <BrandStatement
-          primary="Urban outerwear, built to endure. Designed to be relied on."
+          primary="Urban outerwear, built to endure."
           secondary="Why not is not a question. It’s how she lives."
         />
         <ProductsRow

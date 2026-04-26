@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "outline" | "ghost" | "link";
+type Variant = "primary" | "outline" | "ghost" | "link" | "preorder";
 type Size = "lg" | "md" | "sm";
 
 const variantStyles: Record<Variant, string> = {
@@ -13,6 +13,10 @@ const variantStyles: Record<Variant, string> = {
     "bg-transparent text-foreground-primary hover:bg-surface-secondary",
   link:
     "bg-transparent text-foreground-primary underline underline-offset-4 hover:text-foreground-secondary px-0 h-auto tracking-normal normal-case font-normal",
+  // Distinct CTA used for out-of-stock / pre-order flows; visually different from
+  // primary "Add to bag" so the user sees this is not a normal purchase.
+  preorder:
+    "bg-accent-warm text-foreground-inverse border border-accent-warm hover:bg-foreground-on-cream hover:border-foreground-on-cream",
 };
 
 const sizeStyles: Record<Size, string> = {
