@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/cn";
 
-export interface ProseProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type ProseProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function Prose({ className, ...props }: ProseProps) {
   return (
