@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { SiteOverlays } from "@/components/site-overlays";
+import { getAllCategories } from "@/lib/data/categories";
 
 const inter = Inter({
   variable: "--font-body",
@@ -20,11 +22,17 @@ export const metadata: Metadata = {
     "Urban outerwear, built to endure. Designed to be relied on. Premium women's outerwear from London.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categories = await getAllCategories();
+  const menuCategories = categories.map((c) => ({
+    slug: c.slug,
+    name: c.name,
+  }));
+
   return (
     <html
       lang="en"
@@ -32,6 +40,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-surface-primary text-foreground-primary font-body">
         {children}
+        <SiteOverlays categories={menuCategories} />
       </body>
     </html>
   );
