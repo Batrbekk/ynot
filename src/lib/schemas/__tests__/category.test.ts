@@ -20,3 +20,13 @@ describe("CategorySchema", () => {
     ).toThrow();
   });
 });
+
+import categoriesFixture from "../../data/_mock/categories.json";
+
+describe("CategorySchema mock data", () => {
+  it("validates every category", () => {
+    for (const c of categoriesFixture) {
+      expect(() => CategorySchema.parse(c)).not.toThrow();
+    }
+  });
+});

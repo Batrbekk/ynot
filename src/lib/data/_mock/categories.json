@@ -1,0 +1,11 @@
+[
+  { "slug": "jackets",  "name": "Jackets",  "description": "Outerwear staples — engineered for everyday wear.", "bannerImage": null, "sortOrder": 1, "meta": { "title": "Jackets · YNOT London", "description": "Shop premium jackets from YNOT London." } },
+  { "slug": "blazers",  "name": "Blazers",  "description": "Tailored blazers for refined dressing.",            "bannerImage": null, "sortOrder": 2, "meta": { "title": "Blazers · YNOT London", "description": "Shop tailored blazers." } },
+  { "slug": "bombers",  "name": "Bombers",  "description": "Elevated bombers in leather and technical fabrics.","bannerImage": null, "sortOrder": 3, "meta": { "title": "Bombers · YNOT London", "description": "Shop elevated bomber jackets." } },
+  { "slug": "coats",    "name": "Coats",    "description": "Long-line coats for the colder months.",             "bannerImage": null, "sortOrder": 4, "meta": { "title": "Coats · YNOT London", "description": "Shop wool, shearling, and cashmere coats." } },
+  { "slug": "leather",  "name": "Leather",  "description": "LWG-certified leather pieces.",                       "bannerImage": null, "sortOrder": 5, "meta": { "title": "Leather · YNOT London", "description": "Premium leather outerwear." } },
+  { "slug": "suede",    "name": "Suede",    "description": "Soft, supple suede outerwear.",                        "bannerImage": null, "sortOrder": 6, "meta": { "title": "Suede · YNOT London", "description": "Italian suede jackets and coats." } },
+  { "slug": "wool",     "name": "Wool",     "description": "Pure virgin wool tailoring.",                          "bannerImage": null, "sortOrder": 7, "meta": { "title": "Wool · YNOT London", "description": "Wool coats and tailoring." } },
+  { "slug": "cotton",   "name": "Cotton",   "description": "Cotton-blend layering pieces.",                        "bannerImage": null, "sortOrder": 8, "meta": { "title": "Cotton · YNOT London", "description": "Lightweight cotton outerwear." } },
+  { "slug": "tencel",   "name": "Tencel",   "description": "Sustainable Tencel-based fabrics.",                    "bannerImage": null, "sortOrder": 9, "meta": { "title": "Tencel · YNOT London", "description": "Sustainable Tencel outerwear." } }
+]
