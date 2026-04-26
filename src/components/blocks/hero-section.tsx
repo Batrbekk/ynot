@@ -46,7 +46,7 @@ export function HeroSection({ hero }: { hero: HeroBlock }) {
 
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center text-center text-foreground-inverse px-6">
         <motion.p
-          className="font-heading text-[40px] uppercase tracking-[0.45em] md:text-[56px] md:tracking-[0.55em]"
+          className="font-heading text-[24px] uppercase tracking-[0.3em] md:text-[56px] md:tracking-[0.55em]"
           initial={{ y: 20, opacity: 0 }}
           animate={{
             y: 0,
