@@ -7,10 +7,10 @@
   },
   "hero": {
     "kind": "image",
-    "image": "/sample/jacket-1.svg",
+    "image": "/cms/hero.jpg",
     "videoUrl": null,
     "eyebrow": "New Collection",
-    "ctaLabel": "SHOP",
+    "ctaLabel": "EXPLORE",
     "ctaHref": "/collection/jackets"
   },
   "staticPages": [

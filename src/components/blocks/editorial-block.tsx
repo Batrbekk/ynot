@@ -40,7 +40,7 @@ export function EditorialBlock({
               className="object-cover"
             />
           </div>
-          <div className="max-w-md">
+          <div className="w-full max-w-[480px]">
             <Display level="md" as="h2">
               {title}
             </Display>

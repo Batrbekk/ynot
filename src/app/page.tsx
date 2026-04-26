@@ -18,13 +18,16 @@ export default async function Home() {
     getAllProducts(),
   ]);
 
-  // Pick a "Timeless" hero product for the editorial block
-  const timeless = allProducts.find((p) => p.slug === "the-chelsea-jacket") ?? allProducts[0];
+  const timeless =
+    allProducts.find((p) => p.slug === "the-chelsea-jacket") ?? allProducts[0];
 
   return (
     <>
-      <AnnouncementBar />
-      <SiteHeader overHero />
+      {/* Chrome stack — fixed over the hero, transparent at start, white on scroll */}
+      <div className="fixed top-0 left-0 right-0 z-40">
+        <AnnouncementBar />
+        <SiteHeader overHero />
+      </div>
 
       <main className="flex-1">
         <HeroSection hero={hero} />

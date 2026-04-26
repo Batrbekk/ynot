@@ -1,8 +1,9 @@
 {
   "images": [
-    { "src": "/sample/jacket-1.svg", "alt": "Lookbook image — leather jacket", "productSlug": "leather-biker-jacket" },
-    { "src": "/sample/jacket-2.svg", "alt": "Lookbook image — suede field jacket", "productSlug": "belted-suede-field-jacket" },
-    { "src": "/sample/jacket-3.svg", "alt": "Lookbook image — wool trench", "productSlug": "wool-trench-coat" },
-    { "src": "/sample/jacket-4.svg", "alt": "Lookbook image — cotton parka", "productSlug": null }
+    { "src": "/cms/lookbook/01.jpg", "alt": "Editorial · leather jacket", "productSlug": "leather-biker-jacket" },
+    { "src": "/cms/lookbook/02.jpg", "alt": "Editorial · suede field jacket", "productSlug": "belted-suede-field-jacket" },
+    { "src": "/cms/lookbook/03.jpg", "alt": "Editorial · wool trench", "productSlug": "wool-trench-coat" },
+    { "src": "/cms/lookbook/04.jpg", "alt": "Editorial · transitional outerwear", "productSlug": null },
+    { "src": "/cms/lookbook/05.jpg", "alt": "Editorial · cropped silhouette", "productSlug": "cropped-shearling-coat" }
   ]
 }

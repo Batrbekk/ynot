@@ -9,7 +9,7 @@ export interface BrandStatementProps {
 export function BrandStatement({ primary, secondary }: BrandStatementProps) {
   return (
     <Section background="cream" padding="lg">
-      <div className="mx-auto max-w-3xl text-center px-6">
+      <div className="mx-auto w-full max-w-[800px] text-center px-6">
         <Display level="md" as="p" className="text-foreground-on-cream">
           {primary}
         </Display>

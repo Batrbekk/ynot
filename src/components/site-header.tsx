@@ -18,37 +18,74 @@ import logoWhite from "../../public/brand/ynot-logo-white.png";
 
 export interface SiteHeaderProps {
   /**
-   * When true, header starts transparent over a hero image and becomes solid
-   * after the user scrolls past the hero.
+   * When true, header starts transparent over a hero and crossfades to white
+   * as the user scrolls past the first viewport.
    */
   overHero?: boolean;
 }
 
+/** Returns a 0..1 progress that grows as the user scrolls down the first 70% of viewport height. */
+function useScrollProgress(active: boolean): number {
+  const [progress, setProgress] = React.useState(0);
+  React.useEffect(() => {
+    if (!active) {
+      setProgress(1);
+      return;
+    }
+    let raf = 0;
+    const compute = () => {
+      const range = window.innerHeight * 0.7;
+      const next = Math.min(1, Math.max(0, window.scrollY / range));
+      setProgress(next);
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(compute);
+    };
+    compute();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [active]);
+  return progress;
+}
+
+/** Linear interpolation between two channel values. */
+function lerp(a: number, b: number, t: number) {
+  return Math.round(a + (b - a) * t);
+}
+
 export function SiteHeader({ overHero = false }: SiteHeaderProps) {
-  const [scrolled, setScrolled] = React.useState(false);
+  const progress = useScrollProgress(overHero);
   const itemCount = useCartStore((s) => s.itemCount());
   const openCart = useCartStore((s) => s.openDrawer);
   const openMenu = useUIStore((s) => s.openMenu);
   const openSearch = useUIStore((s) => s.openSearch);
 
-  React.useEffect(() => {
-    if (!overHero) return;
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [overHero]);
-
-  const isTransparent = overHero && !scrolled;
+  // Interpolate: progress 0 -> transparent bg + white text; 1 -> white bg + dark text
+  const bgAlpha = progress;
+  const textChannel = lerp(255, 26, progress); // 255 (white) -> 26 (#1A)
+  const headerStyle: React.CSSProperties = overHero
+    ? {
+        backgroundColor: `rgba(255, 255, 255, ${bgAlpha})`,
+        color: `rgb(${textChannel}, ${textChannel}, ${textChannel})`,
+        borderBottomColor: progress > 0.95 ? "#E5E5E5" : "transparent",
+        borderBottomWidth: 1,
+        borderBottomStyle: "solid",
+      }
+    : {};
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full transition-colors duration-300",
-        isTransparent
-          ? "bg-transparent text-foreground-inverse"
-          : "bg-surface-primary text-foreground-primary border-b border-border-light",
+        "w-full",
+        // When NOT over hero, just a normal solid header
+        !overHero &&
+          "bg-surface-primary text-foreground-primary border-b border-border-light",
       )}
+      style={headerStyle}
     >
       <div className="grid h-12 grid-cols-3 items-center px-5 md:h-14 md:px-8">
         <div className="flex items-center">
@@ -74,10 +111,8 @@ export function SiteHeader({ overHero = false }: SiteHeaderProps) {
               priority
               fill
               sizes="100px"
-              className={cn(
-                "object-contain transition-opacity duration-300",
-                isTransparent ? "opacity-100" : "opacity-0",
-              )}
+              className="object-contain"
+              style={{ opacity: overHero ? 1 - progress : 0 }}
             />
             <Image
               src={logoBlack}
@@ -85,10 +120,8 @@ export function SiteHeader({ overHero = false }: SiteHeaderProps) {
               priority
               fill
               sizes="100px"
-              className={cn(
-                "object-contain transition-opacity duration-300",
-                isTransparent ? "opacity-0" : "opacity-100",
-              )}
+              className="object-contain"
+              style={{ opacity: overHero ? progress : 1 }}
             />
           </Link>
         </div>
@@ -117,7 +150,17 @@ export function SiteHeader({ overHero = false }: SiteHeaderProps) {
           >
             <BagIcon />
             {itemCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground-primary px-1 text-[10px] font-semibold text-foreground-inverse">
+              <span
+                className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                style={{
+                  backgroundColor: overHero
+                    ? `rgb(${textChannel}, ${textChannel}, ${textChannel})`
+                    : undefined,
+                  color: overHero
+                    ? `rgb(${255 - textChannel + 26}, ${255 - textChannel + 26}, ${255 - textChannel + 26})`
+                    : undefined,
+                }}
+              >
                 {itemCount}
               </span>
             )}

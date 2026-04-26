@@ -6,11 +6,29 @@
     "price": 89500,
     "currency": "GBP",
     "description": "A timeless field jacket cut from supple Italian suede with a belted waist for a sculpted silhouette.",
-    "images": ["/sample/jacket-1.svg", "/sample/jacket-2.svg"],
+    "images": [
+      "/cms/products/01.jpg",
+      "/cms/lookbook/02.jpg"
+    ],
     "colour": "Chocolate Brown",
-    "sizes": ["XS", "S", "M", "L", "XL"],
-    "categorySlugs": ["jackets", "suede"],
-    "stock": { "XS": 3, "S": 5, "M": 0, "L": 2, "XL": 1 },
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "categorySlugs": [
+      "jackets",
+      "suede"
+    ],
+    "stock": {
+      "XS": 3,
+      "S": 5,
+      "M": 0,
+      "L": 2,
+      "XL": 1
+    },
     "preOrder": false,
     "details": {
       "materials": "100% Italian suede. Cotton lining.",
@@ -25,11 +43,29 @@
     "price": 129500,
     "currency": "GBP",
     "description": "A double-breasted trench in pure virgin wool, tailored for movement and warmth.",
-    "images": ["/sample/jacket-3.svg"],
+    "images": [
+      "/cms/products/02.jpg",
+      "/cms/lookbook/03.jpg"
+    ],
     "colour": "Charcoal",
-    "sizes": ["XS", "S", "M", "L", "XL"],
-    "categorySlugs": ["coats", "wool"],
-    "stock": { "XS": 0, "S": 4, "M": 6, "L": 3, "XL": 0 },
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "categorySlugs": [
+      "coats",
+      "wool"
+    ],
+    "stock": {
+      "XS": 0,
+      "S": 4,
+      "M": 6,
+      "L": 3,
+      "XL": 0
+    },
     "preOrder": false,
     "details": {
       "materials": "100% virgin wool. Viscose lining.",
@@ -44,11 +80,29 @@
     "price": 99500,
     "currency": "GBP",
     "description": "An asymmetric leather biker jacket with a matte finish and signature YNOT hardware.",
-    "images": ["/sample/jacket-4.svg"],
+    "images": [
+      "/cms/products/03.jpg",
+      "/cms/lookbook/01.jpg"
+    ],
     "colour": "Black",
-    "sizes": ["XS", "S", "M", "L", "XL"],
-    "categorySlugs": ["jackets", "leather"],
-    "stock": { "XS": 2, "S": 3, "M": 4, "L": 2, "XL": 1 },
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "categorySlugs": [
+      "jackets",
+      "leather"
+    ],
+    "stock": {
+      "XS": 2,
+      "S": 3,
+      "M": 4,
+      "L": 2,
+      "XL": 1
+    },
     "preOrder": false,
     "details": {
       "materials": "100% lamb leather. LWG-certified tannery.",
@@ -63,11 +117,29 @@
     "price": 59500,
     "currency": "GBP",
     "description": "A lightweight quilted vest for layering through transitional seasons.",
-    "images": ["/sample/jacket-1.svg"],
+    "images": [
+      "/cms/products/04.jpg",
+      "/cms/lookbook/04.jpg"
+    ],
     "colour": "Olive",
-    "sizes": ["XS", "S", "M", "L", "XL"],
-    "categorySlugs": ["jackets", "cotton"],
-    "stock": { "XS": 0, "S": 0, "M": 0, "L": 0, "XL": 0 },
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "categorySlugs": [
+      "jackets",
+      "cotton"
+    ],
+    "stock": {
+      "XS": 0,
+      "S": 0,
+      "M": 0,
+      "L": 0,
+      "XL": 0
+    },
     "preOrder": true,
     "details": {
       "materials": "Cotton shell, recycled polyester fill.",
@@ -82,11 +154,25 @@
     "price": 149500,
     "currency": "GBP",
     "description": "A cropped shearling coat with reversed wool collar and turned cuffs.",
-    "images": ["/sample/jacket-2.svg"],
+    "images": [
+      "/cms/lookbook/05.jpg",
+      "/cms/products/02.jpg"
+    ],
     "colour": "Cream",
-    "sizes": ["S", "M", "L"],
-    "categorySlugs": ["coats", "leather"],
-    "stock": { "S": 1, "M": 2, "L": 1 },
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "categorySlugs": [
+      "coats",
+      "leather"
+    ],
+    "stock": {
+      "S": 1,
+      "M": 2,
+      "L": 1
+    },
     "preOrder": false,
     "details": {
       "materials": "Lamb shearling. Wool lining.",
@@ -100,12 +186,30 @@
     "name": "The Chelsea Jacket",
     "price": 69500,
     "currency": "GBP",
-    "description": "Our signature mid-length jacket — refined tailoring with everyday wearability.",
-    "images": ["/sample/jacket-3.svg"],
+    "description": "Our signature mid-length jacket \u2014 refined tailoring with everyday wearability.",
+    "images": [
+      "/cms/lookbook/02.jpg",
+      "/cms/products/01.jpg"
+    ],
     "colour": "Navy",
-    "sizes": ["XS", "S", "M", "L", "XL"],
-    "categorySlugs": ["jackets", "wool"],
-    "stock": { "XS": 4, "S": 6, "M": 5, "L": 4, "XL": 2 },
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "categorySlugs": [
+      "jackets",
+      "wool"
+    ],
+    "stock": {
+      "XS": 4,
+      "S": 6,
+      "M": 5,
+      "L": 4,
+      "XL": 2
+    },
     "preOrder": false,
     "details": {
       "materials": "Wool blend.",
@@ -120,11 +224,29 @@
     "price": 54500,
     "currency": "GBP",
     "description": "A clean-line blazer cut for dressed-up or pared-back wear.",
-    "images": ["/sample/jacket-4.svg"],
+    "images": [
+      "/cms/lookbook/03.jpg",
+      "/cms/products/03.jpg"
+    ],
     "colour": "Black",
-    "sizes": ["XS", "S", "M", "L", "XL"],
-    "categorySlugs": ["blazers", "wool"],
-    "stock": { "XS": 2, "S": 3, "M": 4, "L": 3, "XL": 1 },
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "categorySlugs": [
+      "blazers",
+      "wool"
+    ],
+    "stock": {
+      "XS": 2,
+      "S": 3,
+      "M": 4,
+      "L": 3,
+      "XL": 1
+    },
     "preOrder": false,
     "details": {
       "materials": "Wool / silk blend.",
@@ -138,12 +260,30 @@
     "name": "The Notting Hill Bomber",
     "price": 72500,
     "currency": "GBP",
-    "description": "An elevated take on the bomber — leather body, ribbed knit cuffs and hem.",
-    "images": ["/sample/jacket-1.svg"],
+    "description": "An elevated take on the bomber \u2014 leather body, ribbed knit cuffs and hem.",
+    "images": [
+      "/cms/lookbook/01.jpg",
+      "/cms/lookbook/04.jpg"
+    ],
     "colour": "Cognac",
-    "sizes": ["XS", "S", "M", "L", "XL"],
-    "categorySlugs": ["bombers", "leather"],
-    "stock": { "XS": 1, "S": 2, "M": 3, "L": 2, "XL": 0 },
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "categorySlugs": [
+      "bombers",
+      "leather"
+    ],
+    "stock": {
+      "XS": 1,
+      "S": 2,
+      "M": 3,
+      "L": 2,
+      "XL": 0
+    },
     "preOrder": false,
     "details": {
       "materials": "Lamb leather, ribbed knit trims.",

@@ -38,7 +38,7 @@ export default async function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-surface-primary text-foreground-primary font-body">
+      <body className="min-h-screen bg-surface-primary text-foreground-primary font-body">
         {children}
         <SiteOverlays categories={menuCategories} />
       </body>

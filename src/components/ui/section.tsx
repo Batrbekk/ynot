@@ -30,7 +30,7 @@ export function Section({
 }: SectionProps) {
   return (
     <section
-      className={cn(padding[p], background[b], className)}
+      className={cn("w-full block", padding[p], background[b], className)}
       {...props}
     />
   );
