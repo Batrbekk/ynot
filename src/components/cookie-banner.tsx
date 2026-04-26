@@ -5,18 +5,26 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCookieConsentStore } from "@/lib/stores/cookie-consent-store";
 
+/**
+ * useSyncExternalStore-based hook returns the persisted status on the client
+ * after hydration, and "accepted" during SSR — meaning the banner does NOT
+ * render server-side. This avoids both the SSR/CSR mismatch (we never render
+ * differently than the server snapshot says) AND the react-hooks/set-state-in-effect
+ * lint rule, since we don't call setState in any effect.
+ */
+function useConsentStatus(): "pending" | "accepted" | "declined" {
+  return React.useSyncExternalStore(
+    (cb) => useCookieConsentStore.subscribe(cb),
+    () => useCookieConsentStore.getState().status,
+    () => "accepted",
+  );
+}
+
 export function CookieBanner() {
-  const status = useCookieConsentStore((s) => s.status);
+  const status = useConsentStatus();
   const accept = useCookieConsentStore((s) => s.accept);
   const decline = useCookieConsentStore((s) => s.decline);
-  const [mounted, setMounted] = React.useState(false);
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Avoid SSR/CSR mismatch — render only after mount once persist hydrates
-  if (!mounted) return null;
   if (status !== "pending") return null;
 
   return (
