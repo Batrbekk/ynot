@@ -138,19 +138,19 @@ export function SiteHeader({ overHero = false }: SiteHeaderProps) {
           </Link>
         </div>
 
-        <div className="flex items-center justify-end gap-1 md:gap-2">
+        <div className="flex items-center justify-end gap-0 md:gap-2">
           <button
             type="button"
             aria-label="Search"
             onClick={openSearch}
-            className="hidden h-10 w-10 items-center justify-center md:flex"
+            className="flex h-10 w-10 items-center justify-center"
           >
             <SearchIcon />
           </button>
           <Link
             href="/account"
             aria-label="Account"
-            className="hidden h-10 w-10 items-center justify-center md:flex"
+            className="flex h-10 w-10 items-center justify-center"
           >
             <AccountIcon />
           </Link>
