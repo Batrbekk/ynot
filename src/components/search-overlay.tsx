@@ -12,17 +12,17 @@ import { CloseIcon, SearchIcon } from "./icons";
 
 export function SearchOverlay() {
   const open = useUIStore((s) => s.isSearchOpen);
+  if (!open) return null;
+  return <SearchOverlayContent />;
+}
+
+function SearchOverlayContent() {
   const close = useUIStore((s) => s.closeSearch);
   const router = useRouter();
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<Product[]>([]);
 
   React.useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setResults([]);
-      return;
-    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
     };
@@ -32,7 +32,7 @@ export function SearchOverlay() {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, close]);
+  }, [close]);
 
   React.useEffect(() => {
     let active = true;
@@ -51,8 +51,6 @@ export function SearchOverlay() {
       close();
     }
   };
-
-  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-surface-primary text-foreground-primary overflow-y-auto">
