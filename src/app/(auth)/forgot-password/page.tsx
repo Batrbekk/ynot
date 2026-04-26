@@ -8,7 +8,6 @@ export default function ForgotPasswordPage() {
   const handleSubmit = (email: string) => {
     // Stub: real submission wired in when NextAuth lands
     if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
       console.info("[auth-stub] password reset requested for", email);
     }
   };

@@ -16,7 +16,6 @@ function ResetPasswordPageInner() {
   const handleSubmit = (data: ResetPasswordSubmit) => {
     // Stub: real submission wired in when NextAuth lands
     if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
       console.info("[auth-stub] reset password with token", data.token);
     }
   };
