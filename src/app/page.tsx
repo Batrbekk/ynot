@@ -1,38 +1,54 @@
-import Link from "next/link";
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
-import { Container } from "@/components/ui/container";
-import { Display, Eyebrow } from "@/components/ui/typography";
+import { WhatsAppWidget } from "@/components/whatsapp-widget";
+import { HeroSection } from "@/components/blocks/hero-section";
+import { BrandStatement } from "@/components/blocks/brand-statement";
+import { ProductsRow } from "@/components/blocks/products-row";
+import { EditorialBlock } from "@/components/blocks/editorial-block";
+import { LookbookCarousel } from "@/components/blocks/lookbook-carousel";
+import { getHero, getLookbook } from "@/lib/data/content";
+import { getNewArrivals, getAllProducts } from "@/lib/data/products";
 
-export default function Home() {
+export default async function Home() {
+  const [hero, lookbook, newArrivals, allProducts] = await Promise.all([
+    getHero(),
+    getLookbook(),
+    getNewArrivals(4),
+    getAllProducts(),
+  ]);
+
+  // Pick a "Timeless" hero product for the editorial block
+  const timeless = allProducts.find((p) => p.slug === "the-chelsea-jacket") ?? allProducts[0];
+
   return (
     <>
       <AnnouncementBar />
-      <SiteHeader />
+      <SiteHeader overHero />
 
       <main className="flex-1">
-        <Container size="narrow" className="py-24 md:py-32">
-          <Eyebrow>Work in progress</Eyebrow>
-          <Display level="lg" as="h1" className="mt-4">
-            YNOT London — frontend rebuild
-          </Display>
-          <p className="mt-6 max-w-prose text-[15px] leading-relaxed text-foreground-secondary">
-            Design tokens, fonts and the first set of UI primitives are wired
-            up. Continue to the UI kit page to review every component before we
-            assemble the homepage and product flows.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Link href="/ui-kit">
-              <Button>Open UI kit</Button>
-            </Link>
-            <Button variant="outline">Pencil design reference</Button>
-          </div>
-        </Container>
+        <HeroSection hero={hero} />
+        <BrandStatement
+          primary="Urban outerwear, built to endure. Designed to be relied on."
+          secondary="Why not is not a question. It’s how she lives."
+        />
+        <ProductsRow
+          title="New Arrivals"
+          products={newArrivals}
+          ctaHref="/collection/jackets"
+        />
+        <EditorialBlock
+          title="Timeless Collection"
+          body="Signature silhouettes that anchor the collection, crafted with ease and refinement for continual wear."
+          image={timeless.images[0]}
+          ctaHref="/collection/jackets"
+          ctaLabel="Explore"
+        />
+        <LookbookCarousel lookbook={lookbook} />
       </main>
 
       <SiteFooter />
+      <WhatsAppWidget phone="+44 7000 000000" message="Hi YNOT, I have a question." />
     </>
   );
 }
