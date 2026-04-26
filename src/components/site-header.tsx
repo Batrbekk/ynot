@@ -56,9 +56,22 @@ function lerp(a: number, b: number, t: number) {
   return Math.round(a + (b - a) * t);
 }
 
+/**
+ * Read cart count via useSyncExternalStore so the server snapshot is always 0
+ * (matches the cart-store's empty default) and the real persisted count loads
+ * after hydration without an HTML mismatch.
+ */
+function useHydratedCartCount(): number {
+  return React.useSyncExternalStore(
+    (cb) => useCartStore.subscribe(cb),
+    () => useCartStore.getState().itemCount(),
+    () => 0,
+  );
+}
+
 export function SiteHeader({ overHero = false }: SiteHeaderProps) {
   const progress = useScrollProgress(overHero);
-  const itemCount = useCartStore((s) => s.itemCount());
+  const itemCount = useHydratedCartCount();
   const openCart = useCartStore((s) => s.openDrawer);
   const openMenu = useUIStore((s) => s.openMenu);
   const openSearch = useUIStore((s) => s.openSearch);

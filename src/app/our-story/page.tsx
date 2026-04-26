@@ -29,8 +29,7 @@ export default function OurStoryPage() {
       <SiteHeader />
       <main className="flex-1">
         <PageHero
-          eyebrow="Our Story"
-          title="YNOT London"
+          title="Our Story"
           image="/cms/our-story/hero.jpg"
         />
 

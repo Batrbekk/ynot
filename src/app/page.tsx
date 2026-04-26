@@ -7,6 +7,7 @@ import { BrandStatement } from "@/components/blocks/brand-statement";
 import { ProductsRow } from "@/components/blocks/products-row";
 import { EditorialOverlay } from "@/components/blocks/editorial-overlay";
 import { LookbookCarousel } from "@/components/blocks/lookbook-carousel";
+import { FadeUpOnScroll } from "@/components/blocks/fade-up-on-scroll";
 import { getHero, getLookbook } from "@/lib/data/content";
 import { getNewArrivals } from "@/lib/data/products";
 
@@ -29,23 +30,31 @@ export default async function Home() {
 
       <main className="flex-1">
         <HeroSection hero={hero} />
-        <BrandStatement
-          primary="Urban outerwear, built to endure."
-          secondary="Why not is not a question. It’s how she lives."
-        />
-        <ProductsRow
-          title="New Arrivals"
-          products={newArrivals}
-          ctaHref="/collection/jackets"
-        />
-        <EditorialOverlay
-          title="Timeless Collection"
-          body="Signature silhouettes that anchor the collection, crafted with ease and refinement for continual wear."
-          image={timelessImage}
-          ctaHref="/collection/jackets"
-          ctaLabel="Explore"
-        />
-        <LookbookCarousel lookbook={lookbook} />
+        <FadeUpOnScroll>
+          <BrandStatement
+            primary="Urban outerwear, built to endure."
+            secondary="Why not is not a question. It’s how she lives."
+          />
+        </FadeUpOnScroll>
+        <FadeUpOnScroll>
+          <ProductsRow
+            title="New Arrivals"
+            products={newArrivals}
+            ctaHref="/collection/jackets"
+          />
+        </FadeUpOnScroll>
+        <FadeUpOnScroll>
+          <EditorialOverlay
+            title="Timeless Collection"
+            body="Signature silhouettes that anchor the collection, crafted with ease and refinement for continual wear."
+            image={timelessImage}
+            ctaHref="/collection/jackets"
+            ctaLabel="Explore"
+          />
+        </FadeUpOnScroll>
+        <FadeUpOnScroll>
+          <LookbookCarousel lookbook={lookbook} />
+        </FadeUpOnScroll>
       </main>
 
       <SiteFooter />
