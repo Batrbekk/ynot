@@ -4,16 +4,19 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { searchProducts } from "@/lib/data/search";
 import { formatPrice } from "@/lib/format";
+import { duration, ease } from "@/lib/motion";
 import type { Product } from "@/lib/schemas";
 import { CloseIcon, SearchIcon } from "./icons";
 
 export function SearchOverlay() {
   const open = useUIStore((s) => s.isSearchOpen);
-  if (!open) return null;
-  return <SearchOverlayContent />;
+  return (
+    <AnimatePresence>{open && <SearchOverlayContent />}</AnimatePresence>
+  );
 }
 
 function SearchOverlayContent() {
@@ -53,7 +56,12 @@ function SearchOverlayContent() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-surface-primary text-foreground-primary overflow-y-auto">
+    <motion.div
+      className="fixed inset-0 z-50 bg-surface-primary text-foreground-primary overflow-y-auto"
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: duration.base, ease: ease.out } }}
+      exit={{ opacity: 0, y: -8, transition: { duration: duration.fast, ease: ease.out } }}
+    >
       <div className="mx-auto w-full max-w-[960px] px-5 md:px-10 pt-10 pb-20">
         <div className="flex items-center justify-between mb-8">
           <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-foreground-secondary">
@@ -115,6 +123,6 @@ function SearchOverlayContent() {
           </p>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

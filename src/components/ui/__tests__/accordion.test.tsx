@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Accordion } from "../accordion";
 
@@ -17,6 +17,8 @@ describe("Accordion", () => {
     await userEvent.click(screen.getByRole("button", { name: "Description" }));
     expect(screen.getByText("desc body")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Description" }));
-    expect(screen.queryByText("desc body")).toBeNull();
+    // motion's AnimatePresence keeps the element in the DOM during exit
+    // animation; wait for it to fully unmount.
+    await waitFor(() => expect(screen.queryByText("desc body")).toBeNull());
   });
 });

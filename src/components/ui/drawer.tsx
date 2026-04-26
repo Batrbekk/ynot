@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/cn";
+import { drawerPanelLeft, drawerPanelRight, overlayBackdrop } from "@/lib/motion";
 import { CloseIcon } from "../icons";
 
 export interface DrawerProps {
@@ -37,48 +39,60 @@ export function Drawer({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  const panelVariants = side === "left" ? drawerPanelLeft : drawerPanelRight;
 
   return (
-    <div className="fixed inset-0 z-50">
-      <button
-        type="button"
-        data-testid="drawer-backdrop"
-        aria-label="Close drawer"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40"
-      />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className={cn(
-          "absolute top-0 bottom-0 bg-surface-primary text-foreground-primary",
-          "flex flex-col",
-          side === "left" ? "left-0" : "right-0",
-        )}
-        style={{ width }}
-      >
-        <header className="flex items-center justify-between p-5 border-b border-border-light">
-          <h2
-            className={cn(
-              "text-[12px] font-semibold uppercase tracking-[0.2em] text-foreground-primary",
-              hideTitle && "sr-only",
-            )}
-          >
-            {title}
-          </h2>
-          <button
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50">
+          <motion.button
             type="button"
+            data-testid="drawer-backdrop"
+            aria-label="Close drawer"
             onClick={onClose}
-            aria-label="Close"
-            className="h-10 w-10 -mr-2 flex items-center justify-center hover:bg-surface-secondary"
+            className="absolute inset-0 bg-black/40"
+            variants={overlayBackdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          />
+          <motion.aside
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            className={cn(
+              "absolute top-0 bottom-0 bg-surface-primary text-foreground-primary",
+              "flex flex-col",
+              side === "left" ? "left-0" : "right-0",
+            )}
+            style={{ width }}
+            variants={panelVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
           >
-            <CloseIcon />
-          </button>
-        </header>
-        <div className="flex-1 overflow-y-auto">{children}</div>
-      </aside>
-    </div>
+            <header className="flex items-center justify-between p-5 border-b border-border-light">
+              <h2
+                className={cn(
+                  "text-[12px] font-semibold uppercase tracking-[0.2em] text-foreground-primary",
+                  hideTitle && "sr-only",
+                )}
+              >
+                {title}
+              </h2>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="h-10 w-10 -mr-2 flex items-center justify-center hover:bg-surface-secondary"
+              >
+                <CloseIcon />
+              </button>
+            </header>
+            <div className="flex-1 overflow-y-auto">{children}</div>
+          </motion.aside>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

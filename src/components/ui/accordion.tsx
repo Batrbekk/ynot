@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/cn";
+import { duration, ease } from "@/lib/motion";
 
 export interface AccordionItem {
   value: string;
@@ -47,15 +49,38 @@ export function Accordion({
               )}
             >
               <span>{it.title}</span>
-              <span aria-hidden className="text-[18px] font-light">
-                {isOpen ? "−" : "+"}
-              </span>
+              <motion.span
+                aria-hidden
+                className="text-[18px] font-light"
+                animate={{ rotate: isOpen ? 45 : 0 }}
+                transition={{ duration: duration.fast, ease: ease.out }}
+              >
+                +
+              </motion.span>
             </button>
-            {isOpen && (
-              <div className="pb-5 text-[14px] leading-relaxed text-foreground-secondary">
-                {it.content}
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  key="content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{
+                    height: "auto",
+                    opacity: 1,
+                    transition: { duration: duration.base, ease: ease.out },
+                  }}
+                  exit={{
+                    height: 0,
+                    opacity: 0,
+                    transition: { duration: duration.fast, ease: ease.out },
+                  }}
+                  className="overflow-hidden"
+                >
+                  <div className="pb-5 text-[14px] leading-relaxed text-foreground-secondary">
+                    {it.content}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       })}
