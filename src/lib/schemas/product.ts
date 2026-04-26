@@ -21,7 +21,7 @@ export const ProductSchema = z.object({
   colour: z.string().optional(),
   sizes: z.array(SizeSchema),
   categorySlugs: z.array(z.string()),
-  stock: z.record(SizeSchema, z.number().int().nonnegative()),
+  stock: z.partialRecord(SizeSchema, z.number().int().nonnegative()),
   preOrder: z.boolean(),
   details: ProductDetailsSchema,
 });

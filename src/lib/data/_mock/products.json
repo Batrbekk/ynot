@@ -1,0 +1,154 @@
+[
+  {
+    "id": "prod_001",
+    "slug": "belted-suede-field-jacket",
+    "name": "Belted Suede Field Jacket",
+    "price": 89500,
+    "currency": "GBP",
+    "description": "A timeless field jacket cut from supple Italian suede with a belted waist for a sculpted silhouette.",
+    "images": ["/sample/jacket-1.svg", "/sample/jacket-2.svg"],
+    "colour": "Chocolate Brown",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "categorySlugs": ["jackets", "suede"],
+    "stock": { "XS": 3, "S": 5, "M": 0, "L": 2, "XL": 1 },
+    "preOrder": false,
+    "details": {
+      "materials": "100% Italian suede. Cotton lining.",
+      "care": "Dry clean only. Store on a padded hanger.",
+      "sizing": "Fits true to size. Model wears size S."
+    }
+  },
+  {
+    "id": "prod_002",
+    "slug": "wool-trench-coat",
+    "name": "Wool Trench Coat",
+    "price": 129500,
+    "currency": "GBP",
+    "description": "A double-breasted trench in pure virgin wool, tailored for movement and warmth.",
+    "images": ["/sample/jacket-3.svg"],
+    "colour": "Charcoal",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "categorySlugs": ["coats", "wool"],
+    "stock": { "XS": 0, "S": 4, "M": 6, "L": 3, "XL": 0 },
+    "preOrder": false,
+    "details": {
+      "materials": "100% virgin wool. Viscose lining.",
+      "care": "Dry clean only.",
+      "sizing": "Roomy through the body. Size down for a closer fit."
+    }
+  },
+  {
+    "id": "prod_003",
+    "slug": "leather-biker-jacket",
+    "name": "Leather Biker Jacket",
+    "price": 99500,
+    "currency": "GBP",
+    "description": "An asymmetric leather biker jacket with a matte finish and signature YNOT hardware.",
+    "images": ["/sample/jacket-4.svg"],
+    "colour": "Black",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "categorySlugs": ["jackets", "leather"],
+    "stock": { "XS": 2, "S": 3, "M": 4, "L": 2, "XL": 1 },
+    "preOrder": false,
+    "details": {
+      "materials": "100% lamb leather. LWG-certified tannery.",
+      "care": "Wipe with a soft damp cloth. Condition every 6 months.",
+      "sizing": "Slim cut. Consider sizing up if between sizes."
+    }
+  },
+  {
+    "id": "prod_004",
+    "slug": "quilted-field-vest",
+    "name": "Quilted Field Vest",
+    "price": 59500,
+    "currency": "GBP",
+    "description": "A lightweight quilted vest for layering through transitional seasons.",
+    "images": ["/sample/jacket-1.svg"],
+    "colour": "Olive",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "categorySlugs": ["jackets", "cotton"],
+    "stock": { "XS": 0, "S": 0, "M": 0, "L": 0, "XL": 0 },
+    "preOrder": true,
+    "details": {
+      "materials": "Cotton shell, recycled polyester fill.",
+      "care": "Machine wash cold.",
+      "sizing": "Designed to layer over knitwear."
+    }
+  },
+  {
+    "id": "prod_005",
+    "slug": "cropped-shearling-coat",
+    "name": "Cropped Shearling Coat",
+    "price": 149500,
+    "currency": "GBP",
+    "description": "A cropped shearling coat with reversed wool collar and turned cuffs.",
+    "images": ["/sample/jacket-2.svg"],
+    "colour": "Cream",
+    "sizes": ["S", "M", "L"],
+    "categorySlugs": ["coats", "leather"],
+    "stock": { "S": 1, "M": 2, "L": 1 },
+    "preOrder": false,
+    "details": {
+      "materials": "Lamb shearling. Wool lining.",
+      "care": "Specialist clean only.",
+      "sizing": "Cropped at the hip. True to size."
+    }
+  },
+  {
+    "id": "prod_006",
+    "slug": "the-chelsea-jacket",
+    "name": "The Chelsea Jacket",
+    "price": 69500,
+    "currency": "GBP",
+    "description": "Our signature mid-length jacket — refined tailoring with everyday wearability.",
+    "images": ["/sample/jacket-3.svg"],
+    "colour": "Navy",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "categorySlugs": ["jackets", "wool"],
+    "stock": { "XS": 4, "S": 6, "M": 5, "L": 4, "XL": 2 },
+    "preOrder": false,
+    "details": {
+      "materials": "Wool blend.",
+      "care": "Dry clean.",
+      "sizing": "Tailored fit."
+    }
+  },
+  {
+    "id": "prod_007",
+    "slug": "the-belgravia-blazer",
+    "name": "The Belgravia Blazer",
+    "price": 54500,
+    "currency": "GBP",
+    "description": "A clean-line blazer cut for dressed-up or pared-back wear.",
+    "images": ["/sample/jacket-4.svg"],
+    "colour": "Black",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "categorySlugs": ["blazers", "wool"],
+    "stock": { "XS": 2, "S": 3, "M": 4, "L": 3, "XL": 1 },
+    "preOrder": false,
+    "details": {
+      "materials": "Wool / silk blend.",
+      "care": "Dry clean.",
+      "sizing": "Slim fit through the shoulder."
+    }
+  },
+  {
+    "id": "prod_008",
+    "slug": "the-notting-hill-bomber",
+    "name": "The Notting Hill Bomber",
+    "price": 72500,
+    "currency": "GBP",
+    "description": "An elevated take on the bomber — leather body, ribbed knit cuffs and hem.",
+    "images": ["/sample/jacket-1.svg"],
+    "colour": "Cognac",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "categorySlugs": ["bombers", "leather"],
+    "stock": { "XS": 1, "S": 2, "M": 3, "L": 2, "XL": 0 },
+    "preOrder": false,
+    "details": {
+      "materials": "Lamb leather, ribbed knit trims.",
+      "care": "Wipe with damp cloth. Condition every 6 months.",
+      "sizing": "Relaxed through the body."
+    }
+  }
+]

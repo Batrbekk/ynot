@@ -63,3 +63,13 @@ describe("ProductSchema", () => {
     ).toThrow();
   });
 });
+
+import productsFixture from "../../data/_mock/products.json";
+
+describe("ProductSchema mock data", () => {
+  it("validates every product in the mock JSON", () => {
+    for (const p of productsFixture) {
+      expect(() => ProductSchema.parse(p)).not.toThrow();
+    }
+  });
+});
