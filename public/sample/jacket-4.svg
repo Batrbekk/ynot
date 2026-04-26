@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <rect width="600" height="800" fill="#1A1A1A"/>
+  <rect x="40" y="40" width="520" height="720" fill="none" stroke="#C4A87C" stroke-width="1"/>
+  <text x="300" y="410" text-anchor="middle" fill="#F5F0EB" font-family="Georgia, serif" font-size="32" letter-spacing="6">COTTON</text>
+</svg>

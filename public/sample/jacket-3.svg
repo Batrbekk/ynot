@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8B7355"/>
+      <stop offset="100%" stop-color="#3D3428"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#g3)"/>
+  <text x="300" y="410" text-anchor="middle" fill="#F5F0EB" font-family="Georgia, serif" font-size="32" letter-spacing="6">WOOL</text>
+</svg>

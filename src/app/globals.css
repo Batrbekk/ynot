@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  YNOT London — design tokens
+  Source: ynot.pen (Pencil.dev) → variables block.
+  Keep these in sync with the design file. Do not invent new tokens here;
+  add them in Pencil first, then mirror.
+*/
+
+@theme {
+  /* Fonts */
+  --font-body: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-heading), ui-serif, Georgia, serif;
+
+  /* Foreground (text) */
+  --color-foreground-primary: #1a1a1a;
+  --color-foreground-secondary: #666666;
+  --color-foreground-tertiary: #999999;
+  --color-foreground-inverse: #ffffff;
+  --color-foreground-on-cream: #3d3428;
+
+  /* Surfaces (backgrounds) */
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f5f0eb; /* cream */
+  --color-surface-dark: #1a1a1a;
+  --color-surface-announcement: #111111;
+
+  /* Borders */
+  --color-border-light: #e5e5e5;
+  --color-border-dark: #333333;
+
+  /* CTA */
+  --color-cta-bg: #1a1a1a;
+  --color-cta-text: #ffffff;
+  --color-cta-outline-bg: #ffffff;
+  --color-cta-outline-text: #1a1a1a;
+
+  /* Accents */
+  --color-accent-gold: #c4a87c;
+  --color-accent-warm: #8b7355;
+
+  /* Status */
+  --color-success: #27ae60;
+  --color-error: #c0392b;
+
+  /* Spacing scale (px) — mirrors Pencil $spacing-* tokens */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  --spacing-4xl: 96px;
+  --spacing-section: 120px;
+
+  /* Breakpoints from brief */
+  --breakpoint-sm: 375px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base typography defaults */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  font-feature-settings: "ss01", "cv11";
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
