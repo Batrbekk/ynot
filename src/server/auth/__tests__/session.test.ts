@@ -13,7 +13,7 @@ describe("session helpers", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("getSessionUser returns null when there is no session", async () => {
-    vi.mocked(auth).mockResolvedValue(null);
+    vi.mocked(auth).mockResolvedValue(null as never);
     expect(await getSessionUser()).toBeNull();
   });
 
@@ -42,7 +42,7 @@ describe("session helpers", () => {
   });
 
   it("requireSessionUser throws when no session", async () => {
-    vi.mocked(auth).mockResolvedValue(null);
+    vi.mocked(auth).mockResolvedValue(null as never);
     await expect(requireSessionUser()).rejects.toThrow(/UNAUTHENTICATED/);
   });
 });

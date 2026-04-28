@@ -25,7 +25,8 @@ describe("parseEnv", () => {
   });
 
   it("requires NEXTAUTH_SECRET", () => {
-    const { NEXTAUTH_SECRET: _ignored, ...withoutSecret } = baseEnv;
+    const withoutSecret = { ...baseEnv };
+    delete (withoutSecret as Record<string, unknown>).NEXTAUTH_SECRET;
     expect(() => parseEnv(withoutSecret)).toThrow();
   });
 

@@ -1,11 +1,16 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/server/db/client";
 import { getOrderById, getOrdersForCurrentUser } from "@/server/data/orders";
 import { resetDb } from "@/server/__tests__/helpers/reset-db";
 
-async function seedDemoCustomerOrder() {
+const sessionMock = vi.fn();
+vi.mock("@/server/auth/session", () => ({
+  getSessionUser: () => sessionMock(),
+}));
+
+async function seedUserAndOrder() {
   const user = await prisma.user.create({
-    data: { email: "demo@ynot.london", name: "Demo" },
+    data: { email: "u@x.com", name: "Demo", emailVerifiedAt: new Date() },
   });
   await prisma.order.create({
     data: {
@@ -39,15 +44,24 @@ async function seedDemoCustomerOrder() {
       },
     },
   });
+  return user;
 }
 
 describe("server/data/orders", () => {
   beforeEach(async () => {
     await resetDb();
+    sessionMock.mockReset();
   });
 
-  it("getOrdersForCurrentUser returns the demo customer's orders", async () => {
-    await seedDemoCustomerOrder();
+  it("getOrdersForCurrentUser returns the session user's orders", async () => {
+    const user = await seedUserAndOrder();
+    sessionMock.mockResolvedValue({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: "CUSTOMER",
+      emailVerifiedAt: user.emailVerifiedAt,
+    });
     const orders = await getOrdersForCurrentUser();
     expect(orders).toHaveLength(1);
     expect(orders[0].id).toBe("YN-2026-0001");
@@ -56,18 +70,21 @@ describe("server/data/orders", () => {
     expect(orders[0].shippingAddress.city).toBe("London");
   });
 
-  it("getOrdersForCurrentUser returns empty array when demo customer is missing", async () => {
+  it("getOrdersForCurrentUser returns empty array when no session", async () => {
+    sessionMock.mockResolvedValue(null);
     expect(await getOrdersForCurrentUser()).toEqual([]);
   });
 
-  it("getOrderById accepts an orderNumber and returns the order", async () => {
-    await seedDemoCustomerOrder();
+  it("getOrderById accepts an orderNumber and returns the order regardless of session", async () => {
+    await seedUserAndOrder();
+    sessionMock.mockResolvedValue(null);
     const o = await getOrderById("YN-2026-0001");
     expect(o?.id).toBe("YN-2026-0001");
     expect(o?.estimatedDeliveryDate).toBe("2026-04-01");
   });
 
   it("getOrderById returns null when not found", async () => {
+    sessionMock.mockResolvedValue(null);
     expect(await getOrderById("YN-9999-XXXX")).toBeNull();
   });
 });
