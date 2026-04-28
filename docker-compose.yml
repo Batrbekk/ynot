@@ -1,0 +1,52 @@
+# YNOT London — local + production container stack.
+# Profiles:
+#   dev   — postgres + redis only (the Next.js app runs on the host with `pnpm dev`)
+#   prod  — full stack (nginx + app + postgres + redis) — nginx and app stubs added in Phase "Deploy & Ops"
+
+name: ynot
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["dev", "prod"]
+    container_name: ynot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ynot
+      POSTGRES_PASSWORD: ynot_dev_password
+      POSTGRES_DB: ynot_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - ynot_postgres_data:/var/lib/postgresql/data
+      - ./prisma/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ynot -d ynot_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["dev", "prod"]
+    container_name: ynot-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - ynot_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  ynot_postgres_data:
+  ynot_redis_data:
