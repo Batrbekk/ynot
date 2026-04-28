@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 const EnvSchema = z.object({
-  DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string().url(),
+  DATABASE_URL: z.url(),
+  REDIS_URL: z.url(),
   NODE_ENV: z.enum(["development", "test", "production"]),
-  NEXT_PUBLIC_SITE_URL: z.string().url(),
-  SEED_OWNER_EMAIL: z.string().email().optional(),
+  NEXT_PUBLIC_SITE_URL: z.url(),
+  SEED_OWNER_EMAIL: z.email().optional(),
   SEED_OWNER_PASSWORD: z.string().min(8).optional(),
 });
 
