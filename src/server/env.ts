@@ -8,6 +8,9 @@ const EnvSchema = z.object({
   // by downgrading the build to a dev React bundle).
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_SITE_URL: z.url(),
+  NEXTAUTH_SECRET: z.string().min(32),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_FROM: z.email().optional(),
   SEED_OWNER_EMAIL: z.email().optional(),
   SEED_OWNER_PASSWORD: z.string().min(8).optional(),
 });
