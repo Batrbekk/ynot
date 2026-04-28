@@ -8,7 +8,22 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:client": "vitest run --project client",
+    "test:server": "vitest run --project server",
+    "typecheck": "tsc --noEmit",
+    "db:up": "docker compose --profile dev up -d postgres redis",
+    "db:down": "docker compose --profile dev down",
+    "db:logs": "docker compose --profile dev logs -f postgres redis",
+    "db:migrate": "dotenv -e .env.development -- prisma migrate dev",
+    "db:migrate:test": "dotenv -e .env.test -- prisma migrate deploy",
+    "db:migrate:deploy": "dotenv -e .env.production -- prisma migrate deploy",
+    "db:seed": "dotenv -e .env.development -- prisma db seed",
+    "db:studio": "dotenv -e .env.development -- prisma studio",
+    "db:reset": "dotenv -e .env.development -- prisma migrate reset --force"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22",
