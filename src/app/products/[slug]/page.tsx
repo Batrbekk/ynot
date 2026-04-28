@@ -11,8 +11,8 @@ import { ProductInfoPanel } from "@/components/pdp/product-info-panel";
 import { AddToBagSection } from "@/components/pdp/add-to-bag-section";
 import { ProductDetailsAccordion } from "@/components/pdp/product-details-accordion";
 import { RecommendedProducts } from "@/components/pdp/recommended-products";
-import { getProductBySlug, getRecommendations } from "@/lib/data/products";
-import { getCategoryBySlug } from "@/lib/data/categories";
+import { getProductBySlug, getRecommendations } from "@/server/data/products";
+import { getCategoryBySlug } from "@/server/data/categories";
 import { buildProductJsonLd } from "@/lib/seo/product-jsonld";
 
 interface PageProps {

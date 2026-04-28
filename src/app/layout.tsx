@@ -3,7 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SiteOverlays } from "@/components/site-overlays";
 import { CookieBanner } from "@/components/cookie-banner";
-import { getAllCategories } from "@/lib/data/categories";
+import { getAllCategories } from "@/server/data/categories";
 
 const inter = Inter({
   variable: "--font-body",

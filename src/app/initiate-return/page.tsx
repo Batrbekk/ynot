@@ -15,7 +15,7 @@ import { FindOrderForm } from "@/components/returns/find-order-form";
 import { ReturnItemsSelector } from "@/components/returns/return-items-selector";
 import { ReturnConfirmation } from "@/components/returns/return-confirmation";
 import { useReturnsStubStore } from "@/lib/stores/returns-stub-store";
-import { getOrderById } from "@/lib/data/orders";
+import { getOrderById } from "@/server/data/orders";
 import type { Order } from "@/lib/schemas";
 
 function InitiateReturnInner() {

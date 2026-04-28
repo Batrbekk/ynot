@@ -8,8 +8,8 @@ import { ProductsRow } from "@/components/blocks/products-row";
 import { EditorialOverlay } from "@/components/blocks/editorial-overlay";
 import { LookbookCarousel } from "@/components/blocks/lookbook-carousel";
 import { FadeUpOnScroll } from "@/components/blocks/fade-up-on-scroll";
-import { getHero, getLookbook } from "@/lib/data/content";
-import { getNewArrivals } from "@/lib/data/products";
+import { getHero, getLookbook } from "@/server/data/content";
+import { getNewArrivals } from "@/server/data/products";
 
 export default async function Home() {
   const [hero, lookbook, newArrivals] = await Promise.all([

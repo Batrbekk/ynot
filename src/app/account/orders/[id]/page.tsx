@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getOrderById } from "@/lib/data/orders";
+import { getOrderById } from "@/server/data/orders";
 import { OrderDetailLayout } from "@/components/account/order-detail-layout";
 
 interface PageProps {

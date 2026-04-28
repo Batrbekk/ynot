@@ -1,5 +1,5 @@
 import * as React from "react";
-import { getOrdersForCurrentUser } from "@/lib/data/orders";
+import { getOrdersForCurrentUser } from "@/server/data/orders";
 import { OrderListItem } from "@/components/account/order-list-item";
 
 export default async function AccountPreOrdersPage() {
