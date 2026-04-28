@@ -5,16 +5,37 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Phase worktrees — they have their own builds; main lint should not scan them
     ".worktrees/**",
   ]),
+  // Prevent client/lib code from importing server-only modules.
+  // The Prisma client must never be bundled to the browser.
+  {
+    files: ["src/lib/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/server/**", "**/src/server/**"],
+              message:
+                "Do not import server-only modules from client code. Move logic into a Server Component, Route Handler, or Server Action.",
+            },
+            {
+              group: ["@prisma/client", "ioredis"],
+              message:
+                "Database/cache clients are server-only. Use src/server/repositories/* via a Server Component or Route Handler.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
