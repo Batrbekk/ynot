@@ -6,17 +6,31 @@ import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
 import { RegisterForm, type RegisterFormSubmit } from "@/components/auth/register-form";
 import { ToastProvider, useToast } from "@/components/ui/toast";
-import { useAuthStubStore } from "@/lib/stores/auth-stub-store";
+import { authFetch } from "@/lib/auth-fetch";
 
 function RegisterPageInner() {
   const router = useRouter();
   const toast = useToast();
-  const signIn = useAuthStubStore((s) => s.signIn);
 
-  const handleSubmit = (data: RegisterFormSubmit) => {
-    signIn({ email: data.email, firstName: data.firstName });
-    toast.show("Account created");
-    router.push("/");
+  const handleSubmit = async (data: RegisterFormSubmit) => {
+    const res = await authFetch("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        name: `${data.firstName} ${data.lastName}`.trim(),
+      }),
+    });
+    if (res.status === 409) {
+      toast.show("That email is already registered.");
+      return;
+    }
+    if (!res.ok) {
+      toast.show("We could not create your account. Please try again.");
+      return;
+    }
+    toast.show("Check your email for the verification code.");
+    router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
   };
 
   return (

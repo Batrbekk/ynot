@@ -1,7 +1,5 @@
-"use client";
-
 import * as React from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
 import { AnnouncementBar } from "@/components/announcement-bar";
@@ -9,30 +7,32 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WhatsAppWidget } from "@/components/whatsapp-widget";
 import { AccountLayout } from "@/components/account/account-layout";
-import { useAuthStubStore } from "@/lib/stores/auth-stub-store";
+import { SessionProvider } from "@/components/account/session-context";
+import { getSessionUser } from "@/server/auth/session";
 
-export default function AccountLayoutShell({
+export const dynamic = "force-dynamic";
+
+export default async function AccountLayoutShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const isAuthenticated = useAuthStubStore((s) => s.isAuthenticated());
-
-  React.useEffect(() => {
-    if (!isAuthenticated) {
-      const next = encodeURIComponent(pathname);
-      router.replace(`/sign-in?next=${next}`);
-    }
-  }, [isAuthenticated, pathname, router]);
-
-  if (!isAuthenticated) {
-    return null;
+  const user = await getSessionUser();
+  if (!user) {
+    redirect("/sign-in?next=/account");
   }
-
   return (
-    <>
+    <SessionProvider
+      user={{
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        emailVerifiedAt: user.emailVerifiedAt
+          ? user.emailVerifiedAt.toISOString()
+          : null,
+      }}
+    >
       <AnnouncementBar />
       <SiteHeader />
       <main className="flex-1">
@@ -47,6 +47,6 @@ export default function AccountLayoutShell({
         phone="+44 7000 000000"
         message="Hi YNOT, I have a question about my account."
       />
-    </>
+    </SessionProvider>
   );
 }

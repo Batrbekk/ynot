@@ -2,22 +2,38 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
 import { SignInForm, type SignInFormSubmit } from "@/components/auth/sign-in-form";
 import { ToastProvider, useToast } from "@/components/ui/toast";
-import { useAuthStubStore } from "@/lib/stores/auth-stub-store";
+import { authFetch } from "@/lib/auth-fetch";
 
 function SignInPageInner() {
   const router = useRouter();
+  const params = useSearchParams();
+  const next = params.get("next") ?? "/account";
   const toast = useToast();
-  const signIn = useAuthStubStore((s) => s.signIn);
 
-  const handleSubmit = (data: SignInFormSubmit) => {
-    const firstName = data.email.split("@")[0] ?? "Friend";
-    signIn({ email: data.email, firstName });
-    toast.show("Welcome back");
-    router.push("/");
+  const handleSubmit = async (data: SignInFormSubmit) => {
+    const res = await authFetch("/api/auth/sign-in", {
+      method: "POST",
+      body: JSON.stringify({ email: data.email, password: data.password }),
+    });
+    if (res.status === 403) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (body.error === "EMAIL_NOT_VERIFIED") {
+        toast.show("Verify your email to continue.");
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
+    }
+    if (!res.ok) {
+      toast.show("Email or password is incorrect.");
+      return;
+    }
+    toast.show("Welcome back.");
+    router.push(next);
+    router.refresh();
   };
 
   return (
@@ -45,7 +61,9 @@ function SignInPageInner() {
 export default function SignInPage() {
   return (
     <ToastProvider>
-      <SignInPageInner />
+      <React.Suspense fallback={null}>
+        <SignInPageInner />
+      </React.Suspense>
     </ToastProvider>
   );
 }

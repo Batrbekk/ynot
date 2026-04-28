@@ -2,35 +2,44 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 
 export interface ResetPasswordSubmit {
-  token: string;
+  code: string;
   password: string;
 }
 
 export interface ResetPasswordFormProps {
-  token: string;
-  onSubmit: (data: ResetPasswordSubmit) => void;
+  onSubmit: (data: ResetPasswordSubmit) => Promise<void>;
 }
 
-export function ResetPasswordForm({ token, onSubmit }: ResetPasswordFormProps) {
+export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
+  const [code, setCode] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
   const [done, setDone] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password || !confirm) return;
+    if (!code || code.length !== 6 || !password || !confirm) return;
     if (password !== confirm) {
       setError("Passwords do not match");
       return;
     }
     setError(null);
-    onSubmit({ token, password });
-    setDone(true);
+    setSubmitting(true);
+    try {
+      await onSubmit({ code, password });
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reset password.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (done) {
@@ -51,6 +60,16 @@ export function ResetPasswordForm({ token, onSubmit }: ResetPasswordFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <Input
+        label="6-digit code"
+        inputMode="numeric"
+        pattern="\d{6}"
+        maxLength={6}
+        autoComplete="one-time-code"
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        required
+      />
       <PasswordInput
         label="New password"
         autoComplete="new-password"
@@ -66,8 +85,8 @@ export function ResetPasswordForm({ token, onSubmit }: ResetPasswordFormProps) {
         error={error ?? undefined}
         required
       />
-      <Button type="submit" size="lg" fullWidth>
-        Save
+      <Button type="submit" size="lg" fullWidth disabled={submitting}>
+        {submitting ? "Saving…" : "Save"}
       </Button>
     </form>
   );

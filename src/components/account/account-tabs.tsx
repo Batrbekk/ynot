@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { useAuthStubStore } from "@/lib/stores/auth-stub-store";
+import { authFetch } from "@/lib/auth-fetch";
 
 interface Tab {
   href: string;
@@ -22,11 +22,11 @@ const TABS: Tab[] = [
 export function AccountTabs() {
   const pathname = usePathname();
   const router = useRouter();
-  const signOut = useAuthStubStore((s) => s.signOut);
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await authFetch("/api/auth/sign-out", { method: "POST" });
     router.push("/");
+    router.refresh();
   };
 
   return (

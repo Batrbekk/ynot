@@ -8,26 +8,37 @@ import {
   ResetPasswordForm,
   type ResetPasswordSubmit,
 } from "@/components/auth/reset-password-form";
+import { authFetch } from "@/lib/auth-fetch";
 
 function ResetPasswordPageInner() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token") ?? "";
+  const email = searchParams.get("email") ?? "";
 
-  const handleSubmit = (data: ResetPasswordSubmit) => {
-    // Stub: real submission wired in when NextAuth lands
-    if (typeof window !== "undefined") {
-      console.info("[auth-stub] reset password with token", data.token);
+  const handleSubmit = async (data: ResetPasswordSubmit) => {
+    const res = await authFetch("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        code: data.code,
+        newPassword: data.password,
+      }),
+    });
+    if (res.status === 401) {
+      throw new Error("That code is incorrect or expired.");
+    }
+    if (!res.ok) {
+      throw new Error("We could not reset your password right now.");
     }
   };
 
-  if (!token) {
+  if (!email) {
     return (
       <AuthCard
         title="Reset password"
-        subtitle="This reset link is missing or invalid."
+        subtitle="Open this page from the forgot-password flow."
       >
         <div className="text-center text-[14px] text-foreground-secondary">
-          Please request a new link from the{" "}
+          Start over from the{" "}
           <Link
             href="/forgot-password"
             className="underline underline-offset-2 hover:text-foreground-primary"
@@ -42,10 +53,11 @@ function ResetPasswordPageInner() {
 
   return (
     <AuthCard
-      title="Reset password"
-      subtitle="Choose a new password to secure your account."
+      title="Set a new password"
+      subtitle={`Enter the 6-digit code we sent to ${email} and choose a new password.`}
+      sideImage={{ src: "/cms/auth/sign-in.jpg", alt: "YNOT editorial" }}
     >
-      <ResetPasswordForm token={token} onSubmit={handleSubmit} />
+      <ResetPasswordForm onSubmit={handleSubmit} />
     </AuthCard>
   );
 }
