@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useUIStore } from "@/lib/stores/ui-store";
-import { searchProducts } from "@/lib/data/search";
 import { formatPrice } from "@/lib/format";
 import { duration, ease } from "@/lib/motion";
 import type { Product } from "@/lib/schemas";
@@ -39,9 +38,14 @@ function SearchOverlayContent() {
 
   React.useEffect(() => {
     let active = true;
-    searchProducts(query).then((rs) => {
-      if (active) setResults(rs);
-    });
+    fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      .then((r) => r.json())
+      .then((data: { results: Product[] }) => {
+        if (active) setResults(data.results);
+      })
+      .catch(() => {
+        if (active) setResults([]);
+      });
     return () => {
       active = false;
     };

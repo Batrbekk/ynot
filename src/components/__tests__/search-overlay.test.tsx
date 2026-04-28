@@ -17,6 +17,31 @@ vi.mock("next/navigation", () => ({
 
 beforeEach(() => {
   useUIStore.setState({ isSearchOpen: true, isMenuOpen: false });
+  // Mock /api/search to return a single fixture matching "trench" queries.
+  global.fetch = vi.fn(async (url: string | URL) => {
+    const q = new URL(url, "http://test").searchParams.get("q") ?? "";
+    const results = q.toLowerCase().includes("trench")
+      ? [
+          {
+            id: "p1",
+            slug: "wool-trench-coat",
+            name: "Wool Trench Coat",
+            price: 79500,
+            currency: "GBP",
+            description: "Tailored wool trench.",
+            images: ["/sample/trench.svg"],
+            sizes: ["S", "M", "L"],
+            categorySlugs: ["jackets"],
+            stock: { S: 3, M: 5, L: 2 },
+            preOrder: false,
+            details: { materials: "Wool", care: "Dry clean", sizing: "TTS" },
+          },
+        ]
+      : [];
+    return new Response(JSON.stringify({ results }), {
+      headers: { "content-type": "application/json" },
+    });
+  }) as unknown as typeof fetch;
 });
 
 describe("SearchOverlay", () => {

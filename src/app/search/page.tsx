@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { searchProducts } from "@/lib/data/search";
+import { searchProducts } from "@/server/data/search";
 import { formatPrice } from "@/lib/format";
 import { Container } from "@/components/ui/container";
 import { Display, Eyebrow } from "@/components/ui/typography";

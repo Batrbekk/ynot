@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AddressCard } from "@/components/account/address-card";
 import { AddressFormModal } from "@/components/account/address-form-modal";
 import { useAddressesStore } from "@/lib/stores/addresses-store";
-import type { SavedAddress } from "@/lib/data/addresses";
+import type { SavedAddress } from "@/lib/schemas/saved-address";
 import type { Address } from "@/lib/schemas";
 
 const SEED: SavedAddress[] = [

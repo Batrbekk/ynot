@@ -3,7 +3,10 @@ import { z } from "zod";
 const EnvSchema = z.object({
   DATABASE_URL: z.url(),
   REDIS_URL: z.url(),
-  NODE_ENV: z.enum(["development", "test", "production"]),
+  // Default to "development" so we can omit NODE_ENV from committed env
+  // files (pinning it there breaks `dotenv -e .env.development -- next build`
+  // by downgrading the build to a dev React bundle).
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_SITE_URL: z.url(),
   SEED_OWNER_EMAIL: z.email().optional(),
   SEED_OWNER_PASSWORD: z.string().min(8).optional(),

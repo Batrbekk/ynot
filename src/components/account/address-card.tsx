@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { SavedAddress } from "@/lib/data/addresses";
+import type { SavedAddress } from "@/lib/schemas/saved-address";
 import { Button } from "@/components/ui/button";
 
 export interface AddressCardProps {

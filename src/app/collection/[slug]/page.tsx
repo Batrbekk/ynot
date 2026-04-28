@@ -11,8 +11,8 @@ import { FilterBar } from "@/components/catalog/filter-bar";
 import { SortDropdown } from "@/components/catalog/sort-dropdown";
 import { ProductGrid } from "@/components/catalog/product-grid";
 import { LoadMoreButton } from "@/components/catalog/load-more-button";
-import { getCategoryBySlug, getAllCategories } from "@/lib/data/categories";
-import { getProductsByCategory } from "@/lib/data/products";
+import { getCategoryBySlug, getAllCategories } from "@/server/data/categories";
+import { getProductsByCategory } from "@/server/data/products";
 import { applyCatalogQuery, type CatalogSort } from "@/lib/catalog/filter";
 import type { Size } from "@/lib/schemas";
 

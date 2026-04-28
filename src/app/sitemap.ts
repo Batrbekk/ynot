@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getAllProducts } from "@/lib/data/products";
-import { getAllCategories } from "@/lib/data/categories";
+import { getAllProducts } from "@/server/data/products";
+import { getAllCategories } from "@/server/data/categories";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ynotlondon.com";
 

@@ -7,7 +7,7 @@ import { Select } from "@/components/ui/select";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import type { Address } from "@/lib/schemas";
-import type { SavedAddress } from "@/lib/data/addresses";
+import type { SavedAddress } from "@/lib/schemas/saved-address";
 
 const COUNTRIES = [
   { value: "GB", label: "United Kingdom" },
