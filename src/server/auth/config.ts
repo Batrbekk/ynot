@@ -8,7 +8,11 @@ import { verifyPassword } from "./password";
 
 export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database", maxAge: 30 * 24 * 60 * 60 },
+  // Auth.js v5 requires JWT strategy when Credentials provider is the only
+  // sign-in path — DB sessions are only writable by adapter-driven providers
+  // (OAuth + email-link). Token TTL still 30 days; the cookie payload is a
+  // signed JWT containing the user id.
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   trustHost: true,
   pages: {
     signIn: "/sign-in",
@@ -47,8 +51,18 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
-    session: async ({ session, user }) => {
-      session.user.id = user.id;
+    jwt: async ({ token, user }) => {
+      // On sign-in, copy the user id into the token so subsequent reads can
+      // resolve it without another DB query.
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      if (token?.id && typeof token.id === "string") {
+        session.user.id = token.id;
+      }
       return session;
     },
   },
