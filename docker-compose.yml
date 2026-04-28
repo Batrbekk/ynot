@@ -1,7 +1,12 @@
 # YNOT London — local + production container stack.
 # Profiles:
-#   dev   — postgres + redis only (the Next.js app runs on the host with `pnpm dev`)
-#   prod  — full stack (nginx + app + postgres + redis) — nginx and app stubs added in Phase "Deploy & Ops"
+#   dev   — postgres + redis bound to the host on 5432/6379 so `pnpm dev` and
+#           Prisma CLI on the host can reach them
+#   prod  — adds app + nginx stubs. Phase "Deploy & Ops" will replace the stubs
+#           with a real Next.js standalone build, real nginx config, certbot,
+#           env_file from /etc/ynot/secrets.env, AND will switch the postgres /
+#           redis port bindings to 127.0.0.1-only (or remove them entirely so
+#           only the app container reaches the data tier via Docker DNS).
 
 name: ynot
 
@@ -16,6 +21,8 @@ services:
       POSTGRES_PASSWORD: ynot_dev_password
       POSTGRES_DB: ynot_dev
     ports:
+      # WARNING: bound to 0.0.0.0 in dev for host access. Phase "Deploy & Ops"
+      # MUST switch this to "127.0.0.1:5432:5432" or remove entirely for prod.
       - "5432:5432"
     volumes:
       - ynot_postgres_data:/var/lib/postgresql/data
@@ -38,6 +45,8 @@ services:
       - --maxmemory-policy
       - allkeys-lru
     ports:
+      # WARNING: same as postgres above — Deploy & Ops switches this to
+      # "127.0.0.1:6379:6379" or removes it for prod.
       - "6379:6379"
     volumes:
       - ynot_redis_data:/data
@@ -46,6 +55,48 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  app:
+    image: node:22-alpine
+    profiles: ["prod"]
+    container_name: ynot-app
+    restart: unless-stopped
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ynot:ynot_dev_password@postgres:5432/ynot_prod?schema=public
+      REDIS_URL: redis://redis:6379
+      NEXT_PUBLIC_SITE_URL: https://ynot.london
+    command:
+      - sh
+      - -c
+      - |
+        echo "Phase 'Deploy & Ops' will replace this stub with a real build (Dockerfile + standalone Next.js output)."
+        sleep infinity
+    ports:
+      - "3000:3000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    profiles: ["prod"]
+    container_name: ynot-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - sh
+      - -c
+      - |
+        echo "Phase 'Deploy & Ops' will mount the real nginx.conf, certbot, and Let's Encrypt volumes."
+        sleep infinity
 
 volumes:
   ynot_postgres_data:
