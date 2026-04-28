@@ -211,7 +211,7 @@ export const authConfig: NextAuthConfig = {
 
 1. **Issue** (`issueVerificationToken`):
    - Generate 6-digit code with `crypto.randomInt(0, 1_000_000).toString().padStart(6, "0")`.
-   - Hash with bcrypt cost-factor 8 (faster than passwords; codes are short-lived).
+   - Hash with bcrypt **cost-factor 8** — deliberately lower than the password cost (10). Rationale: a code lives ≤ 15 min and only six digits long. The password cost protects against an offline-brute-force-of-stolen-hash attack across years; the code cost only needs to keep up with rate-limited online guessing. Documented at the call site so a future contributor does not "harmonise" the two.
    - Insert row: `{ identifier: 'verify:<email>', token: <hash>, expires: now + 15 min }`.
    - Return the **plain code** to the caller so it can be emailed; never log to DB plaintext.
 2. **Consume** (`consumeVerificationToken`):
@@ -293,7 +293,24 @@ Redis sliding-window keyed by `<route>:<ip>` (and additionally `<route>:<email>`
 
 Exceeding the limit returns `429 Too Many Requests` with a `Retry-After` header and a generic message ("Too many attempts. Try again later.") — never reveals which dimension was tripped.
 
-### 5.9 Address book mutations
+### 5.9 CSRF protection on custom routes
+
+Auth.js handles CSRF for the catch-all `[...nextauth]` automatically. Every other state-changing custom route (`/api/auth/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/account/*`) requires an explicit `x-csrf-token` header that matches the value Auth.js sets in the `__Host-authjs.csrf-token` cookie. Implementation:
+
+```ts
+// src/lib/auth-fetch.ts (client-side helper)
+export async function authFetch(url: string, init?: RequestInit) {
+  const csrfToken = await fetch("/api/auth/csrf").then((r) => r.json()).then((j) => j.csrfToken);
+  return fetch(url, {
+    ...init,
+    headers: { ...(init?.headers ?? {}), "x-csrf-token": csrfToken, "content-type": "application/json" },
+  });
+}
+```
+
+Every form in `(auth)/*/page.tsx` and `account/*` calls `authFetch` instead of raw `fetch`. Server-side, a small middleware validates the header against the cookie and rejects with `403 INVALID_CSRF` on mismatch.
+
+### 5.10 Address book mutations
 
 `/api/auth/account/addresses` POST creates a new address tied to the session user. PATCH/DELETE on `[id]` first verifies `address.userId === session.user.id` to prevent IDOR. Setting `isDefault: true` runs inside `withTransaction` to clear the previous default in one statement.
 
