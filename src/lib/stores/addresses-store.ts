@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Address } from "@/lib/schemas";
-import type { SavedAddress } from "@/lib/data/addresses";
+import type { SavedAddress } from "@/lib/schemas/saved-address";
 
 let nextSeq = 100;
 function nextId(): string {
