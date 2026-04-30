@@ -18,6 +18,7 @@ export async function resetDb(): Promise<void> {
     const list = tables.map((t) => `"${t.tablename}"`).join(", ");
     await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`);
   }
+  await prisma.$executeRawUnsafe(`ALTER SEQUENCE order_number_seq RESTART WITH 1`);
   const rateLimitKeys = await redis.keys("ratelimit:*");
   if (rateLimitKeys.length > 0) {
     await redis.del(...rateLimitKeys);
