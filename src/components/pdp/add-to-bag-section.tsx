@@ -33,18 +33,14 @@ export function AddToBagSection({ product }: AddToBagSectionProps) {
   const isPreOrderForSelection =
     product.preOrder || (size !== null && selectedStock === 0);
 
-  const onAdd = () => {
+  const onAdd = async () => {
     if (!size) return;
-    addItem({
+    await addItem({
       productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      image: product.images[0] ?? "",
-      colour: colour?.name ?? "",
       size,
-      unitPrice: product.price,
+      colour: colour?.name ?? '',
       quantity: 1,
-      preOrder: isPreOrderForSelection,
+      isPreorder: isPreOrderForSelection,
     });
     openDrawer();
   };

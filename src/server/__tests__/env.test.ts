@@ -8,6 +8,10 @@ describe("parseEnv", () => {
     NODE_ENV: "development",
     NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
     NEXTAUTH_SECRET: "a-32-byte-base64-string-for-tests-12345",
+    STRIPE_SECRET_KEY: "sk_test_stub_for_tests",
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_stub_for_tests",
+    STRIPE_WEBHOOK_SECRET: "whsec_stub_for_tests",
+    ORDER_TOKEN_SECRET: "test-order-token-secret-at-least-32-chars-long",
   };
 
   it("accepts a complete dev environment", () => {

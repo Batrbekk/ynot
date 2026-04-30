@@ -12,6 +12,18 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     ".worktrees/**",
   ]),
+  // Allow underscore-prefixed parameters to be unused (e.g. _req in route handlers).
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        args: "all",
+        argsIgnorePattern: "^_",
+        caughtErrors: "all",
+        caughtErrorsIgnorePattern: "^_",
+        ignoreRestSiblings: true,
+      }],
+    },
+  },
   // Prevent client/lib code from importing server-only modules.
   // The Prisma client must never be bundled to the browser.
   {

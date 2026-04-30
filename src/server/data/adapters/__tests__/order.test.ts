@@ -30,6 +30,7 @@ const baseRow = {
   utmContent: null,
   referrer: null,
   landingPath: null,
+  promoCodeId: null as string | null,
   createdAt: new Date("2026-03-28T11:23:00Z"),
   updatedAt: new Date("2026-03-28T11:23:00Z"),
   items: [
