@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { resetDb } from '@/server/__tests__/helpers/reset-db';
 import { prisma } from '@/server/db/client';
 import { mockStripeSdk } from '@/server/__tests__/helpers/mock-stripe';
@@ -8,6 +8,7 @@ import { seedShipping } from '../../../../tests/seeds/shipping';
 
 describe('createOrderAndPaymentIntent', () => {
   beforeEach(async () => {
+    vi.resetModules();
     await resetDb();
     await seedShipping(prisma);
   });
@@ -30,7 +31,7 @@ describe('createOrderAndPaymentIntent', () => {
 
   it('creates Order(PENDING_PAYMENT) + OrderItem + Payment + decrements stock', async () => {
     const stripe = mockStripeSdk();
-    const { createOrderAndPaymentIntent } = await import('../service?t=1');
+    const { createOrderAndPaymentIntent } = await import('../service');
     const { cart, product } = await seedCartWithItem({ stock: 3 });
 
     const result = await createOrderAndPaymentIntent({
@@ -66,7 +67,7 @@ describe('createOrderAndPaymentIntent', () => {
 
   it('throws StockConflictError when stock insufficient', async () => {
     mockStripeSdk();
-    const { createOrderAndPaymentIntent } = await import('../service?t=2');
+    const { createOrderAndPaymentIntent } = await import('../service');
     const { cart } = await seedCartWithItem({ stock: 1 });
     // Manually inflate cart qty above stock to simulate race.
     await prisma.cartItem.updateMany({ where: { cartId: cart.id }, data: { quantity: 3 } });
@@ -87,7 +88,7 @@ describe('createOrderAndPaymentIntent', () => {
 
   it('reuses existing ghost user for the same email', async () => {
     mockStripeSdk();
-    const { createOrderAndPaymentIntent } = await import('../service?t=3');
+    const { createOrderAndPaymentIntent } = await import('../service');
     const { cart: cart1 } = await seedCartWithItem({ stock: 5 });
     const { cart: cart2 } = await seedCartWithItem({ stock: 5 });
 
