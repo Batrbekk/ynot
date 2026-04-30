@@ -197,7 +197,13 @@ export function ShippingForm({ quote, selectedMethodId, onAddressBlur, onSelectM
         </fieldset>
       )}
 
-      <Button type="submit" size="lg" fullWidth disabled={!selectedMethodId}>
+      <Button
+        type="button"
+        size="lg"
+        fullWidth
+        disabled={!selectedMethodId}
+        onClick={selectedMethodId ? onContinue : undefined}
+      >
         Continue to payment
       </Button>
     </form>

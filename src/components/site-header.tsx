@@ -58,13 +58,13 @@ function lerp(a: number, b: number, t: number) {
 
 /**
  * Read cart count via useSyncExternalStore so the server snapshot is always 0
- * (matches the cart-store's empty default) and the real persisted count loads
- * after hydration without an HTML mismatch.
+ * and the real count from the server-driven snapshot loads after hydration
+ * without an HTML mismatch.
  */
 function useHydratedCartCount(): number {
   return React.useSyncExternalStore(
     (cb) => useCartStore.subscribe(cb),
-    () => useCartStore.getState().itemCount(),
+    () => useCartStore.getState().snapshot?.itemCount ?? 0,
     () => 0,
   );
 }
