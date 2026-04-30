@@ -12,7 +12,8 @@ import type { Prisma } from '@prisma/client';
  */
 export async function nextOrderNumber(tx: Prisma.TransactionClient): Promise<string> {
   const rows = await tx.$queryRaw<Array<{ nextval: bigint }>>`SELECT nextval('order_number_seq')`;
-  const n = rows[0]?.nextval ?? 1n;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const n: bigint = rows[0]?.nextval ?? BigInt(1);
   const year = new Date().getUTCFullYear();
   return `YN-${year}-${n.toString().padStart(5, '0')}`;
 }
