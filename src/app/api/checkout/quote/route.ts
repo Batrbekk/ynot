@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   let parsed;
   try {
     parsed = QuoteRequest.parse(await req.json());
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'INVALID_BODY' }, { status: 400 });
   }
   const cart = await resolveCart();

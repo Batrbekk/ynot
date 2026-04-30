@@ -50,6 +50,7 @@ describe('CartDrawer', () => {
     useCartStore.setState({ snapshot: sampleSnapshot });
     // Mock removeItem to avoid actual fetch
     const removeItem = vi.fn().mockResolvedValue(undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useCartStore.setState({ removeItem } as any);
     render(<CartDrawer />);
     await userEvent.click(screen.getByRole('button', { name: /remove/i }));

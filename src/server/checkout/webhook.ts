@@ -19,7 +19,7 @@ export async function handleWebhook(input: WebhookInput): Promise<WebhookResult>
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(input.rawBody, input.signature, env.STRIPE_WEBHOOK_SECRET);
-  } catch (e) {
+  } catch {
     return { status: 400, body: 'invalid signature' };
   }
 

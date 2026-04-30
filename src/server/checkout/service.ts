@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Size } from '@prisma/client';
 import { prisma } from '@/server/db/client';
 import { stripe } from './stripe';
 import { snapshotCart, StockConflictError } from '@/server/cart/service';
@@ -140,7 +140,7 @@ export async function createOrderAndPaymentIntent(
             productName: i.productName,
             productImage: i.productImage,
             colour: i.colour,
-            size: i.size as any,
+            size: i.size as Size,
             unitPriceCents: i.unitPriceCents,
             currency: 'GBP',
             quantity: i.quantity,

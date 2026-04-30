@@ -19,7 +19,7 @@ const EnvSchema = z.object({
   DHL_API_SECRET: z.string().optional(),
   DHL_ACCOUNT_NUMBER: z.string().optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
-  RESEND_FROM: z.email().optional(),
+  RESEND_FROM: z.string().optional(), // accepts "Display Name <email>" Resend sender format
   SEED_OWNER_EMAIL: z.email().optional(),
   SEED_OWNER_PASSWORD: z.string().min(8).optional(),
 });

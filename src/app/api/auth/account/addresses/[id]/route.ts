@@ -61,7 +61,7 @@ export async function PATCH(req: Request, ctx: RouteContext): Promise<NextRespon
   }
 }
 
-export async function DELETE(req: Request, ctx: RouteContext): Promise<NextResponse> {
+export async function DELETE(_req: Request, ctx: RouteContext): Promise<NextResponse> {
   try {
     await assertCsrf();
     const session = await requireSessionUser();

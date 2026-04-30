@@ -14,10 +14,10 @@ const FIXTURE_SNAPSHOT = {
 describe('useCartStore', () => {
   beforeEach(() => {
     vi.resetModules();
-    global.fetch = vi.fn(async () => ({
+    vi.stubGlobal('fetch', vi.fn(async () => ({
       ok: true, status: 200,
       json: async () => FIXTURE_SNAPSHOT,
-    }) as unknown as Response) as any;
+    }) as unknown as Response));
   });
   afterEach(() => { vi.unstubAllGlobals(); });
 
@@ -40,10 +40,10 @@ describe('useCartStore', () => {
   });
 
   it('handles 409 STOCK_CONFLICT by setting error', async () => {
-    global.fetch = vi.fn(async () => ({
+    vi.stubGlobal('fetch', vi.fn(async () => ({
       ok: false, status: 409,
       json: async () => ({ error: 'STOCK_CONFLICT', stockAvailable: 2 }),
-    }) as unknown as Response) as any;
+    }) as unknown as Response));
     const { useCartStore } = await import('../cart-store');
     const result = await useCartStore.getState().addItem({
       productId: 'p1', size: 'S', colour: 'Black', quantity: 99, isPreorder: false,

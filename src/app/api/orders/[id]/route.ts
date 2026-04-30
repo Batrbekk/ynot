@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/server/db/client';
+import type { Order, OrderItem, Payment, User } from '@prisma/client';
 import { getSessionUser } from '@/server/auth/session';
 import { verifyOrderToken } from '@/server/checkout/order-token';
 
@@ -10,7 +11,7 @@ const ORDER_TOKEN_COOKIE = '__ynot_order_token';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(req: Request, { params }: Ctx) {
+export async function GET(_req: Request, { params }: Ctx) {
   const { id } = await params;
   const order = await prisma.order.findUnique({
     where: { id },
@@ -36,7 +37,9 @@ export async function GET(req: Request, { params }: Ctx) {
   return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
 }
 
-function serialise(order: any) {
+type OrderWithRelations = Order & { items: OrderItem[]; payment: Payment | null; user: User | null };
+
+function serialise(order: OrderWithRelations) {
   return {
     id: order.id,
     orderNumber: order.orderNumber,

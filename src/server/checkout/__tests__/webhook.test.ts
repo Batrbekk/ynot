@@ -82,7 +82,7 @@ describe('handlePaymentSucceeded', () => {
     const { order } = await seedPendingOrder();
     const fakeEvent = {
       id: 'evt_succ_1', type: 'payment_intent.succeeded',
-      data: { object: { id: 'pi_test_succ' } as any },
+      data: { object: { id: 'pi_test_succ' } as unknown as import('stripe').default.PaymentIntent },
     };
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
@@ -98,7 +98,7 @@ describe('handlePaymentSucceeded', () => {
     const { order, promoId } = await seedPendingOrder({ promoCode: 'WELCOME10' });
     const fakeEvent = {
       id: 'evt_succ_2', type: 'payment_intent.succeeded',
-      data: { object: { id: 'pi_test_succ' } as any },
+      data: { object: { id: 'pi_test_succ' } as unknown as import('stripe').default.PaymentIntent },
     };
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
@@ -142,7 +142,7 @@ describe('handlePaymentFailed', () => {
     });
     const fakeEvent = {
       id: 'evt_fail_1', type: 'payment_intent.payment_failed',
-      data: { object: { id: 'pi_test_fail' } as any },
+      data: { object: { id: 'pi_test_fail' } as unknown as import('stripe').default.PaymentIntent },
     };
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },

@@ -35,6 +35,7 @@ describe('AddToBagSection', () => {
 
   it('calls addItem and opens the drawer when a size is picked + Add clicked', async () => {
     const addItemMock = vi.fn().mockResolvedValue({ ok: true });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useCartStore.setState({ addItem: addItemMock } as any);
     render(<AddToBagSection product={product} />);
     await userEvent.click(screen.getByRole('button', { name: /size m/i }));

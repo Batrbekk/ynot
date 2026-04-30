@@ -25,13 +25,15 @@ interface CartState {
   closeDrawer: () => void;
 }
 
+type ErrorJson = { error: string; stockAvailable?: number; message?: string };
+
 async function call<T = CartSnapshotT>(url: string, init?: RequestInit): Promise<{ ok: boolean; status: number; json: T }> {
   const res = await fetch(url, { credentials: 'include', headers: { 'content-type': 'application/json' }, ...init });
   const json = (await res.json()) as T;
   return { ok: res.ok, status: res.status, json };
 }
 
-export const useCartStore = create<CartState>()((set, get) => ({
+export const useCartStore = create<CartState>()((set) => ({
   snapshot: null,
   isLoading: false,
   isOpen: false,
@@ -43,20 +45,24 @@ export const useCartStore = create<CartState>()((set, get) => ({
   },
 
   async addItem(input) {
-    const { ok, status, json } = await call('/api/cart/items', { method: 'POST', body: JSON.stringify(input) });
-    if (ok) { set({ snapshot: json as unknown as CartSnapshotT }); return { ok: true }; }
-    if (status === 409 && (json as any).error === 'STOCK_CONFLICT') {
-      return { ok: false, error: 'STOCK_CONFLICT', stockAvailable: (json as any).stockAvailable };
+    const { ok, status, json } = await call<CartSnapshotT | ErrorJson>('/api/cart/items', { method: 'POST', body: JSON.stringify(input) });
+    if (ok) { set({ snapshot: json as CartSnapshotT }); return { ok: true }; }
+    const err = json as ErrorJson;
+    if (status === 409 && err.error === 'STOCK_CONFLICT') {
+      return { ok: false, error: 'STOCK_CONFLICT', stockAvailable: err.stockAvailable ?? 0 };
     }
     return { ok: false, error: 'UNKNOWN' };
   },
 
   async setQuantity(itemId, quantity) {
-    const { ok, status, json } = await call(`/api/cart/items/${itemId}`, {
+    const { ok, status, json } = await call<CartSnapshotT | ErrorJson>(`/api/cart/items/${itemId}`, {
       method: 'PATCH', body: JSON.stringify({ quantity }),
     });
-    if (ok) { set({ snapshot: json as unknown as CartSnapshotT }); return { ok: true }; }
-    if (status === 409) return { ok: false, error: 'STOCK_CONFLICT', stockAvailable: (json as any).stockAvailable };
+    if (ok) { set({ snapshot: json as CartSnapshotT }); return { ok: true }; }
+    if (status === 409) {
+      const err = json as ErrorJson;
+      return { ok: false, error: 'STOCK_CONFLICT', stockAvailable: err.stockAvailable ?? 0 };
+    }
     return { ok: false, error: 'UNKNOWN' };
   },
 
@@ -66,9 +72,10 @@ export const useCartStore = create<CartState>()((set, get) => ({
   },
 
   async applyPromo(code) {
-    const { ok, json } = await call('/api/cart/promo', { method: 'POST', body: JSON.stringify({ code }) });
-    if (ok) { set({ snapshot: json as unknown as CartSnapshotT }); return { ok: true }; }
-    return { ok: false, error: (json as any).error ?? 'UNKNOWN', message: (json as any).message };
+    const { ok, json } = await call<CartSnapshotT | ErrorJson>('/api/cart/promo', { method: 'POST', body: JSON.stringify({ code }) });
+    if (ok) { set({ snapshot: json as CartSnapshotT }); return { ok: true }; }
+    const err = json as ErrorJson;
+    return { ok: false, error: err.error ?? 'UNKNOWN', message: err.message };
   },
 
   async removePromo() {
