@@ -40,6 +40,8 @@ enum Carrier {
 }
 
 enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_FAILED
   NEW
   PROCESSING
   SHIPPED
@@ -108,6 +110,9 @@ model Product {
   materials   String
   care        String
   sizing      String
+  weightGrams         Int?
+  hsCode              String?
+  countryOfOriginCode String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -253,6 +258,7 @@ model User {
   id              String    @id @default(cuid())
   email           String    @unique
   passwordHash    String?
+  isGuest         Boolean   @default(false)
   name            String?
   role            UserRole  @default(CUSTOMER)
   emailVerifiedAt DateTime?
@@ -398,6 +404,8 @@ model Order {
   discountCents         Int         @default(0)
   totalCents            Int
   currency              Currency    @default(GBP)
+  promoCodeId           String?
+  promoCode             PromoCode?  @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
   carrier               Carrier
   trackingNumber        String?
   estimatedDeliveryDate DateTime?
@@ -493,6 +501,7 @@ model PromoCode {
   deletedAt     DateTime?
 
   carts       Cart[]
+  orders      Order[]
   redemptions PromoRedemption[]
 
   @@index([deletedAt])
@@ -639,4 +648,14 @@ model ReviewImage {
   sortOrder Int        @default(0)
 
   @@index([reviewId])
+}
+
+model StripeEvent {
+  id        String   @id          // = stripe event.id (e.g. "evt_1ABC...")
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([type])
 }
