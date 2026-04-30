@@ -4,6 +4,8 @@
  * currently renders from mocks.
  */
 import { PrismaClient, Carrier, HeroKind, Size, UserRole } from "@prisma/client";
+import { seedShipping as seedPhase4Shipping } from '../tests/seeds/shipping';
+import { seedPromos } from '../tests/seeds/promo';
 import bcrypt from "bcryptjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -437,6 +439,10 @@ async function main() {
   console.log("  owner + demo customer + saved address ✓");
   await seedDemoOrder();
   console.log("  demo order ✓");
+  await seedPhase4Shipping(prisma);
+  console.log("  Phase 4 shipping zones + methods (fixed IDs) ✓");
+  await seedPromos(prisma);
+  console.log("  Phase 4 promo codes ✓");
 }
 
 main()
