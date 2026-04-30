@@ -26,7 +26,7 @@ export async function handleWebhook(input: WebhookInput): Promise<WebhookResult>
   const { alreadyProcessed } = await recordStripeEvent(
     event.id,
     event.type,
-    event as unknown as Record<string, unknown>,
+    event as unknown as import('@prisma/client').Prisma.InputJsonValue,
   );
   if (alreadyProcessed) return { status: 200 };
 
