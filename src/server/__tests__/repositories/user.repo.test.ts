@@ -6,6 +6,9 @@ import {
   markEmailVerified,
   softDeleteUser,
   updatePassword,
+  createGuestUser,
+  getOrCreateGuestUser,
+  EmailTakenByFullAccountError,
 } from "../../repositories/user.repo";
 import { resetDb } from "../helpers/reset-db";
 
@@ -57,5 +60,46 @@ describe("user.repo", () => {
     await softDeleteUser(u.id);
     const after = await prisma.user.findUnique({ where: { id: u.id } });
     expect(after?.deletedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe('user.repo — ghost users', () => {
+  beforeEach(async () => { await resetDb(); });
+
+  it('createUser still works with passwordHash provided', async () => {
+    const u = await createUser({ email: 'a@x.com', passwordHash: 'hash', firstName: 'A', lastName: 'B' });
+    expect(u.passwordHash).toBe('hash');
+    expect(u.isGuest).toBe(false);
+  });
+
+  it('createGuestUser creates a ghost with null passwordHash', async () => {
+    const u = await createGuestUser({ email: 'guest@x.com' });
+    expect(u.passwordHash).toBeNull();
+    expect(u.isGuest).toBe(true);
+    expect(u.emailVerifiedAt).toBeNull();
+  });
+
+  it('createGuestUser throws on duplicate email', async () => {
+    await createGuestUser({ email: 'g@x.com' });
+    await expect(createGuestUser({ email: 'g@x.com' })).rejects.toThrow();
+  });
+
+  it('getOrCreateGuestUser returns existing ghost', async () => {
+    const a = await createGuestUser({ email: 'g@x.com' });
+    const b = await getOrCreateGuestUser({ email: 'g@x.com' });
+    expect(b.id).toBe(a.id);
+  });
+
+  it('getOrCreateGuestUser creates if missing', async () => {
+    const u = await getOrCreateGuestUser({ email: 'new@x.com' });
+    expect(u.isGuest).toBe(true);
+    expect(u.passwordHash).toBeNull();
+  });
+
+  it('getOrCreateGuestUser throws EmailTakenByFullAccountError when email belongs to a full user', async () => {
+    await createUser({ email: 'real@x.com', passwordHash: 'h', firstName: 'R', lastName: 'X' });
+    await expect(getOrCreateGuestUser({ email: 'real@x.com' })).rejects.toBeInstanceOf(
+      EmailTakenByFullAccountError,
+    );
   });
 });
