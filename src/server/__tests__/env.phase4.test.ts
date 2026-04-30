@@ -6,6 +6,7 @@ describe('env.ts (Phase 4 additions)', () => {
     const original = process.env.STRIPE_SECRET_KEY;
     delete process.env.STRIPE_SECRET_KEY;
     try {
+      // @ts-expect-error — Vite query suffix for cache-busting; TS can't resolve it.
       await expect(import('../env?phase4-missing-stripe')).rejects.toThrow(
         /STRIPE_SECRET_KEY/i,
       );
@@ -25,6 +26,7 @@ describe('env.ts (Phase 4 additions)', () => {
 
   it('defaults SHIPPING_PROVIDER to "mock"', async () => {
     process.env.SHIPPING_PROVIDER = '';
+    // @ts-expect-error — Vite query suffix for cache-busting; TS can't resolve it.
     const mod = await import('../env?phase4-default-shipping');
     expect(mod.env.SHIPPING_PROVIDER).toBe('mock');
   });
