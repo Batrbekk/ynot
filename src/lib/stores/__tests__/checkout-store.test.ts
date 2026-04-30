@@ -1,94 +1,69 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { useCheckoutStore } from "../checkout-store";
-import { useCartStore } from "../cart-store";
-import type { Address } from "@/lib/schemas";
+import { describe, it, expect, beforeEach } from 'vitest';
+import { useCheckoutStore } from '../checkout-store';
+import type { ShippingAddressT, QuoteResponseT } from '@/lib/schemas/checkout';
 
-const addr: Address = {
-  firstName: "Jane",
-  lastName: "Doe",
-  line1: "42 King's Road",
+const addr: ShippingAddressT = {
+  email: 'jane@example.com',
+  firstName: 'Jane',
+  lastName: 'Doe',
+  line1: '42 King\'s Road',
   line2: null,
-  city: "London",
-  postcode: "SW3 4ND",
-  country: "GB",
-  phone: "+44 7700 900123",
+  city: 'London',
+  postcode: 'SW3 4ND',
+  countryCode: 'GB',
+  phone: '+44 7700 900123',
 };
 
-const item = {
-  productId: "p1",
-  slug: "p1",
-  name: "Test",
-  image: "/x.jpg",
-  colour: "Black",
-  size: "M" as const,
-  unitPrice: 50000,
-  quantity: 1,
-  preOrder: false,
+const quote: QuoteResponseT = {
+  methods: [
+    {
+      methodId: 'rm-tracked',
+      name: 'Royal Mail Tracked',
+      carrier: 'ROYAL_MAIL',
+      baseRateCents: 0,
+      dutiesCents: 0,
+      totalCents: 0,
+      estimatedDaysMin: 2,
+      estimatedDaysMax: 5,
+    },
+  ],
 };
 
 beforeEach(() => {
-  useCheckoutStore.setState({
-    shippingAddress: null,
-    shippingMethod: null,
-    placedOrder: null,
-  });
-  useCartStore.setState({ items: [], promoCode: null, isOpen: false });
+  useCheckoutStore.setState({ shippingAddress: null, quote: null, selectedMethodId: null });
 });
 
-describe("checkout store", () => {
-  it("starts empty", () => {
+describe('checkout store', () => {
+  it('starts empty', () => {
     const s = useCheckoutStore.getState();
     expect(s.shippingAddress).toBeNull();
-    expect(s.shippingMethod).toBeNull();
-    expect(s.placedOrder).toBeNull();
+    expect(s.quote).toBeNull();
+    expect(s.selectedMethodId).toBeNull();
   });
 
-  it("setShipping stores address and method", () => {
-    useCheckoutStore.getState().setShipping(addr, "royal-mail");
-    const s = useCheckoutStore.getState();
-    expect(s.shippingAddress?.firstName).toBe("Jane");
-    expect(s.shippingMethod).toBe("royal-mail");
+  it('setAddress stores the address', () => {
+    useCheckoutStore.getState().setAddress(addr);
+    expect(useCheckoutStore.getState().shippingAddress?.firstName).toBe('Jane');
   });
 
-  it("placeOrder snapshots cart + shipping, clears cart, returns id", () => {
-    useCartStore.getState().addItem(item);
-    useCheckoutStore.getState().setShipping(addr, "dhl");
-    const id = useCheckoutStore.getState().placeOrder();
-    expect(id).toMatch(/^YNT-\d{8}-\d{4}$/);
-    const s = useCheckoutStore.getState();
-    expect(s.placedOrder?.id).toBe(id);
-    expect(s.placedOrder?.items.length).toBe(1);
-    expect(s.placedOrder?.carrier).toBe("dhl");
-    expect(s.placedOrder?.shippingAddress.firstName).toBe("Jane");
-    // cart cleared
-    expect(useCartStore.getState().items.length).toBe(0);
+  it('setQuote stores the quote', () => {
+    useCheckoutStore.getState().setQuote(quote);
+    expect(useCheckoutStore.getState().quote?.methods.length).toBe(1);
   });
 
-  it("placeOrder returns null when no shipping address set", () => {
-    useCartStore.getState().addItem(item);
-    const id = useCheckoutStore.getState().placeOrder();
-    expect(id).toBeNull();
+  it('selectMethod stores the methodId', () => {
+    useCheckoutStore.getState().selectMethod('rm-tracked');
+    expect(useCheckoutStore.getState().selectedMethodId).toBe('rm-tracked');
   });
 
-  it("placeOrder returns null when cart is empty", () => {
-    useCheckoutStore.getState().setShipping(addr, "royal-mail");
-    const id = useCheckoutStore.getState().placeOrder();
-    expect(id).toBeNull();
-  });
-
-  it("getPlacedOrderById returns the snapshot", () => {
-    useCartStore.getState().addItem(item);
-    useCheckoutStore.getState().setShipping(addr, "royal-mail");
-    const id = useCheckoutStore.getState().placeOrder()!;
-    const order = useCheckoutStore.getState().getPlacedOrderById(id);
-    expect(order?.id).toBe(id);
-  });
-
-  it("reset clears the store", () => {
-    useCartStore.getState().addItem(item);
-    useCheckoutStore.getState().setShipping(addr, "royal-mail");
-    useCheckoutStore.getState().placeOrder();
+  it('reset clears all state', () => {
+    useCheckoutStore.getState().setAddress(addr);
+    useCheckoutStore.getState().setQuote(quote);
+    useCheckoutStore.getState().selectMethod('rm-tracked');
     useCheckoutStore.getState().reset();
-    expect(useCheckoutStore.getState().placedOrder).toBeNull();
+    const s = useCheckoutStore.getState();
+    expect(s.shippingAddress).toBeNull();
+    expect(s.quote).toBeNull();
+    expect(s.selectedMethodId).toBeNull();
   });
 });
