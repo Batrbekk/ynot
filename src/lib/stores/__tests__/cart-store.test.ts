@@ -1,85 +1,53 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { useCartStore } from "../cart-store";
+// @vitest-environment jsdom
+import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
 
-const item = (overrides: Partial<{ size: "S" | "M"; quantity: number }> = {}) => ({
-  productId: "prod_001",
-  slug: "belted-suede-field-jacket",
-  name: "Belted Suede Field Jacket",
-  image: "/sample/jacket-1.svg",
-  colour: "Chocolate Brown",
-  size: overrides.size ?? "M",
-  unitPrice: 89500,
-  quantity: overrides.quantity ?? 1,
-  preOrder: false,
-} as const);
+const FIXTURE_SNAPSHOT = {
+  id: 'cart-1',
+  items: [],
+  subtotalCents: 0,
+  discountCents: 0,
+  promo: null,
+  itemCount: 0,
+  expiresAt: new Date().toISOString(),
+};
 
-beforeEach(() => {
-  useCartStore.setState({ items: [], promoCode: null, isOpen: false });
-});
+describe('useCartStore', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    global.fetch = vi.fn(async () => ({
+      ok: true, status: 200,
+      json: async () => FIXTURE_SNAPSHOT,
+    }) as unknown as Response) as any;
+  });
+  afterEach(() => { vi.unstubAllGlobals(); });
 
-describe("cart store", () => {
-  it("addItem adds new item", () => {
-    useCartStore.getState().addItem(item());
-    expect(useCartStore.getState().items.length).toBe(1);
+  it('hydrate fetches from /api/cart', async () => {
+    const { useCartStore } = await import('../cart-store');
+    await useCartStore.getState().hydrate();
+    expect(global.fetch).toHaveBeenCalledWith('/api/cart', expect.objectContaining({ credentials: 'include' }));
+    expect(useCartStore.getState().snapshot).toEqual(FIXTURE_SNAPSHOT);
   });
 
-  it("addItem increments quantity if same productId+size", () => {
-    useCartStore.getState().addItem(item({ size: "M", quantity: 1 }));
-    useCartStore.getState().addItem(item({ size: "M", quantity: 2 }));
-    const items = useCartStore.getState().items;
-    expect(items.length).toBe(1);
-    expect(items[0].quantity).toBe(3);
+  it('addItem POSTs to /api/cart/items', async () => {
+    const { useCartStore } = await import('../cart-store');
+    await useCartStore.getState().addItem({
+      productId: 'p1', size: 'S', colour: 'Black', quantity: 1, isPreorder: false,
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/cart/items',
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 
-  it("addItem with different size creates separate line", () => {
-    useCartStore.getState().addItem(item({ size: "S" }));
-    useCartStore.getState().addItem(item({ size: "M" }));
-    expect(useCartStore.getState().items.length).toBe(2);
-  });
-
-  it("removeItem removes by productId+size", () => {
-    useCartStore.getState().addItem(item({ size: "S" }));
-    useCartStore.getState().addItem(item({ size: "M" }));
-    useCartStore.getState().removeItem("prod_001", "S");
-    const items = useCartStore.getState().items;
-    expect(items.length).toBe(1);
-    expect(items[0].size).toBe("M");
-  });
-
-  it("setQuantity updates an existing line", () => {
-    useCartStore.getState().addItem(item({ size: "M" }));
-    useCartStore.getState().setQuantity("prod_001", "M", 5);
-    expect(useCartStore.getState().items[0].quantity).toBe(5);
-  });
-
-  it("setQuantity to 0 removes the line", () => {
-    useCartStore.getState().addItem(item({ size: "M" }));
-    useCartStore.getState().setQuantity("prod_001", "M", 0);
-    expect(useCartStore.getState().items.length).toBe(0);
-  });
-
-  it("clear empties the cart", () => {
-    useCartStore.getState().addItem(item());
-    useCartStore.getState().clear();
-    expect(useCartStore.getState().items).toEqual([]);
-  });
-
-  it("subtotal sums unitPrice * quantity", () => {
-    useCartStore.getState().addItem(item({ size: "M", quantity: 2 }));
-    useCartStore.getState().addItem(item({ size: "S", quantity: 1 }));
-    expect(useCartStore.getState().subtotal()).toBe(89500 * 3);
-  });
-
-  it("itemCount sums quantities", () => {
-    useCartStore.getState().addItem(item({ size: "M", quantity: 2 }));
-    useCartStore.getState().addItem(item({ size: "S", quantity: 3 }));
-    expect(useCartStore.getState().itemCount()).toBe(5);
-  });
-
-  it("openDrawer + closeDrawer toggle isOpen", () => {
-    useCartStore.getState().openDrawer();
-    expect(useCartStore.getState().isOpen).toBe(true);
-    useCartStore.getState().closeDrawer();
-    expect(useCartStore.getState().isOpen).toBe(false);
+  it('handles 409 STOCK_CONFLICT by setting error', async () => {
+    global.fetch = vi.fn(async () => ({
+      ok: false, status: 409,
+      json: async () => ({ error: 'STOCK_CONFLICT', stockAvailable: 2 }),
+    }) as unknown as Response) as any;
+    const { useCartStore } = await import('../cart-store');
+    const result = await useCartStore.getState().addItem({
+      productId: 'p1', size: 'S', colour: 'Black', quantity: 99, isPreorder: false,
+    });
+    expect(result).toMatchObject({ ok: false, error: 'STOCK_CONFLICT', stockAvailable: 2 });
   });
 });

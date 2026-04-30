@@ -1,88 +1,86 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { CartItem, Size } from "../schemas";
+import { create } from 'zustand';
+import type { CartSnapshotT, AddItemRequestT } from '@/lib/schemas/cart';
 
-type CartState = {
-  items: CartItem[];
-  promoCode: string | null;
+type AddResult =
+  | { ok: true }
+  | { ok: false; error: 'STOCK_CONFLICT'; stockAvailable: number }
+  | { ok: false; error: 'INVALID_BODY' | 'UNKNOWN' };
+
+type PromoResult =
+  | { ok: true }
+  | { ok: false; error: string; message?: string };
+
+interface CartState {
+  snapshot: CartSnapshotT | null;
+  isLoading: boolean;
   isOpen: boolean;
-  addItem: (item: CartItem) => void;
-  removeItem: (productId: string, size: Size) => void;
-  setQuantity: (productId: string, size: Size, quantity: number) => void;
-  setPromoCode: (code: string | null) => void;
-  clear: () => void;
+  hydrate: () => Promise<void>;
+  addItem: (input: AddItemRequestT) => Promise<AddResult>;
+  setQuantity: (itemId: string, quantity: number) => Promise<AddResult>;
+  removeItem: (itemId: string) => Promise<void>;
+  applyPromo: (code: string) => Promise<PromoResult>;
+  removePromo: () => Promise<void>;
+  clear: () => Promise<void>;
   openDrawer: () => void;
   closeDrawer: () => void;
-  subtotal: () => number;
-  itemCount: () => number;
-};
+}
 
-export const useCartStore = create<CartState>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      promoCode: null,
-      isOpen: false,
+async function call<T = CartSnapshotT>(url: string, init?: RequestInit): Promise<{ ok: boolean; status: number; json: T }> {
+  const res = await fetch(url, { credentials: 'include', headers: { 'content-type': 'application/json' }, ...init });
+  const json = (await res.json()) as T;
+  return { ok: res.ok, status: res.status, json };
+}
 
-      addItem: (incoming) =>
-        set((state) => {
-          const idx = state.items.findIndex(
-            (i) => i.productId === incoming.productId && i.size === incoming.size,
-          );
-          if (idx >= 0) {
-            const next = [...state.items];
-            next[idx] = {
-              ...next[idx],
-              quantity: next[idx].quantity + incoming.quantity,
-            };
-            return { items: next };
-          }
-          return { items: [...state.items, incoming] };
-        }),
+export const useCartStore = create<CartState>()((set, get) => ({
+  snapshot: null,
+  isLoading: false,
+  isOpen: false,
 
-      removeItem: (productId, size) =>
-        set((state) => ({
-          items: state.items.filter(
-            (i) => !(i.productId === productId && i.size === size),
-          ),
-        })),
+  async hydrate() {
+    set({ isLoading: true });
+    const { json } = await call('/api/cart');
+    set({ snapshot: json, isLoading: false });
+  },
 
-      setQuantity: (productId, size, quantity) =>
-        set((state) => {
-          if (quantity <= 0) {
-            return {
-              items: state.items.filter(
-                (i) => !(i.productId === productId && i.size === size),
-              ),
-            };
-          }
-          return {
-            items: state.items.map((i) =>
-              i.productId === productId && i.size === size
-                ? { ...i, quantity }
-                : i,
-            ),
-          };
-        }),
+  async addItem(input) {
+    const { ok, status, json } = await call('/api/cart/items', { method: 'POST', body: JSON.stringify(input) });
+    if (ok) { set({ snapshot: json as unknown as CartSnapshotT }); return { ok: true }; }
+    if (status === 409 && (json as any).error === 'STOCK_CONFLICT') {
+      return { ok: false, error: 'STOCK_CONFLICT', stockAvailable: (json as any).stockAvailable };
+    }
+    return { ok: false, error: 'UNKNOWN' };
+  },
 
-      setPromoCode: (code) => set({ promoCode: code }),
+  async setQuantity(itemId, quantity) {
+    const { ok, status, json } = await call(`/api/cart/items/${itemId}`, {
+      method: 'PATCH', body: JSON.stringify({ quantity }),
+    });
+    if (ok) { set({ snapshot: json as unknown as CartSnapshotT }); return { ok: true }; }
+    if (status === 409) return { ok: false, error: 'STOCK_CONFLICT', stockAvailable: (json as any).stockAvailable };
+    return { ok: false, error: 'UNKNOWN' };
+  },
 
-      clear: () => set({ items: [], promoCode: null }),
+  async removeItem(itemId) {
+    const { json } = await call(`/api/cart/items/${itemId}`, { method: 'DELETE' });
+    set({ snapshot: json });
+  },
 
-      openDrawer: () => set({ isOpen: true }),
-      closeDrawer: () => set({ isOpen: false }),
+  async applyPromo(code) {
+    const { ok, json } = await call('/api/cart/promo', { method: 'POST', body: JSON.stringify({ code }) });
+    if (ok) { set({ snapshot: json as unknown as CartSnapshotT }); return { ok: true }; }
+    return { ok: false, error: (json as any).error ?? 'UNKNOWN', message: (json as any).message };
+  },
 
-      subtotal: () =>
-        get().items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
+  async removePromo() {
+    const { json } = await call('/api/cart/promo', { method: 'DELETE' });
+    set({ snapshot: json });
+  },
 
-      itemCount: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
-    }),
-    {
-      name: "ynot-cart",
-      partialize: (state) => ({
-        items: state.items,
-        promoCode: state.promoCode,
-      }),
-    },
-  ),
-);
+  async clear() {
+    const { json } = await call('/api/cart', { method: 'DELETE' });
+    set({ snapshot: json });
+  },
+
+  openDrawer: () => set({ isOpen: true }),
+  closeDrawer: () => set({ isOpen: false }),
+}));
