@@ -98,6 +98,29 @@ services:
         echo "Phase 'Deploy & Ops' will mount the real nginx.conf, certbot, and Let's Encrypt volumes."
         sleep infinity
 
+  ynot-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    profiles: ["prod"]
+    container_name: ynot-worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - WORKER_ENABLED=${WORKER_ENABLED:-true}
+    env_file:
+      - path: .env.local
+        required: false
+    volumes:
+      - ynot-labels:/var/lib/ynot/labels
+
 volumes:
   ynot_postgres_data:
   ynot_redis_data:
+  ynot-labels:
