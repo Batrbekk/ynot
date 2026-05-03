@@ -11,6 +11,10 @@ import { OrderReceipt, type OrderReceiptProps } from "./order-receipt";
 import { OrderShipped, type OrderShippedProps } from "./order-shipped";
 import { OrderDelivered, type OrderDeliveredProps } from "./order-delivered";
 import { OrderCancelled, type OrderCancelledProps } from "./order-cancelled";
+import {
+  ReturnInstructionsUk,
+  type ReturnInstructionsUkProps,
+} from "./return-instructions-uk";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -34,4 +38,10 @@ registerTemplate("OrderCancelled", async (payload) => {
   const p = payload as OrderCancelledProps;
   const { html, text } = await renderEmail(createElement(OrderCancelled, p));
   return { subject: `Your order ${p.orderNumber} has been cancelled`, html, text };
+});
+
+registerTemplate("ReturnInstructionsUk", async (payload) => {
+  const p = payload as ReturnInstructionsUkProps;
+  const { html, text } = await renderEmail(createElement(ReturnInstructionsUk, p));
+  return { subject: `Return ${p.returnNumber} — your prepaid label`, html, text };
 });
