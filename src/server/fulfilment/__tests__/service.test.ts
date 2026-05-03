@@ -81,7 +81,9 @@ function buildDeps(opts: {
   };
   return {
     ...carrier,
-    sendLabelFailureAlert: opts.alert ?? vi.fn().mockResolvedValue(undefined),
+    sendLabelFailureAlert:
+      (opts.alert as TryCreateShipmentDeps['sendLabelFailureAlert']) ??
+      (async () => undefined),
   };
 }
 
