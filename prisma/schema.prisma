@@ -722,6 +722,25 @@ model NewsletterSubscriber {
   metadata       Json?
 }
 
+model EmailJob {
+  id             String          @id @default(cuid())
+  template       String
+  recipientEmail String
+  payload        Json
+  dispatchAt     DateTime
+  status         EmailJobStatus  @default(PENDING)
+  attempts       Int             @default(0)
+  lastError      String?
+  sentAt         DateTime?
+  cancelledAt    DateTime?
+  cancelReason   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([dispatchAt, status])
+  @@index([template, status])
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String
