@@ -679,7 +679,7 @@ Phase 5 ships **12 new templates** (10 customer-facing + 2 admin alerts) + rebra
 | `OrderReceipt` | Stripe `payment_intent.succeeded` (synchronous after Order finalise) | Customer | Lists items, prices, shipping address, payment summary. Mixed-cart receipt has two sections: "Shipping now" + "Pre-order — ships in 4-6 weeks". |
 | `OrderShipped` | Per Shipment, on `Shipment.shippedAt` set | Customer | One email per Shipment. Includes carrier, tracking number, tracking URL (`https://www.royalmail.com/track/{n}` or DHL equivalent), estimated delivery. |
 | `OrderDelivered` | Per Shipment, on `Shipment.deliveredAt` set | Customer | One per Shipment; nudges to leave a review. |
-| `OrderCancelled` | On admin cancel | Customer | Refund amount, reason (truncated), apology copy. |
+| `OrderCancelled` | On admin "Cancel order" action (`/admin/orders/[id]`) | Customer | Refund amount + ETA, reason (truncated for customer-friendliness), apology copy + invitation to email `hello@ynotlondon.com` if questions. |
 | `ReturnInstructionsUk` | On `POST /api/returns` for `shipCountry = GB` | Customer | Prepaid Royal Mail label as PDF attachment; instructions; 14-day ship-by date. |
 | `ReturnInstructionsInternational` | On `POST /api/returns` for `shipCountry != GB` | Customer | Customs PDF + commercial invoice as attachments; return address; instructions. |
 | `RefundIssued` | On `RefundService.refundForReturn` success | Customer | Amount refunded, items list, expected card-statement timing. |
