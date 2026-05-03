@@ -15,6 +15,10 @@ import {
   ReturnInstructionsUk,
   type ReturnInstructionsUkProps,
 } from "./return-instructions-uk";
+import {
+  ReturnInstructionsInternational,
+  type ReturnInstructionsInternationalProps,
+} from "./return-instructions-international";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -44,4 +48,10 @@ registerTemplate("ReturnInstructionsUk", async (payload) => {
   const p = payload as ReturnInstructionsUkProps;
   const { html, text } = await renderEmail(createElement(ReturnInstructionsUk, p));
   return { subject: `Return ${p.returnNumber} — your prepaid label`, html, text };
+});
+
+registerTemplate("ReturnInstructionsInternational", async (payload) => {
+  const p = payload as ReturnInstructionsInternationalProps;
+  const { html, text } = await renderEmail(createElement(ReturnInstructionsInternational, p));
+  return { subject: `Return ${p.returnNumber} — instructions`, html, text };
 });
