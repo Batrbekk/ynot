@@ -463,6 +463,7 @@ model Order {
   redemptions PromoRedemption[]
   shipments   Shipment[]
   returns     Return[]
+  refundEvents RefundEvent[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -572,6 +573,7 @@ model Return {
   updatedAt         DateTime       @updatedAt
 
   items             ReturnItem[]
+  refundEvents      RefundEvent[]
 
   @@index([orderId])
   @@index([status, createdAt])
@@ -587,6 +589,20 @@ model ReturnItem {
 
   @@index([returnId])
   @@index([orderItemId])
+}
+
+model RefundEvent {
+  id              String     @id @default(cuid())
+  returnId        String?
+  return          Return?    @relation(fields: [returnId], references: [id], onDelete: SetNull)
+  orderId         String
+  order           Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stripeRefundId  String     @unique
+  amountCents     Int
+  reason          String
+  createdAt       DateTime   @default(now())
+
+  @@index([orderId])
 }
 
 model PromoCode {
