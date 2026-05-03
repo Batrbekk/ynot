@@ -21,6 +21,7 @@ import {
 } from "./return-instructions-international";
 import { RefundIssued, type RefundIssuedProps } from "./refund-issued";
 import { RefundRejected, type RefundRejectedProps } from "./refund-rejected";
+import { AbandonedCart1h, type AbandonedCart1hProps } from "./abandoned-cart-1h";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -68,4 +69,10 @@ registerTemplate("RefundRejected", async (payload) => {
   const p = payload as RefundRejectedProps;
   const { html, text } = await renderEmail(createElement(RefundRejected, p));
   return { subject: `Update on your return ${p.returnNumber}`, html, text };
+});
+
+registerTemplate("AbandonedCart1h", async (payload) => {
+  const p = payload as AbandonedCart1hProps;
+  const { html, text } = await renderEmail(createElement(AbandonedCart1h, p));
+  return { subject: "You left something behind", html, text };
 });
