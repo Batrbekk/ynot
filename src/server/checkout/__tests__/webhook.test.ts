@@ -124,7 +124,7 @@ describe('handlePaymentSucceeded', () => {
       });
       return { ok: true };
     });
-    const send = vi.fn(async () => ({ id: 'em_1' }));
+    const send = vi.fn(async (_input: { to: string; subject: string }) => ({ id: 'em_1' }));
 
     await handleWebhook(
       { rawBody: '{}', signature: 's' },
