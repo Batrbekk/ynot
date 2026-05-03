@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import type { Cart, CartEvent, CartItem } from '@prisma/client';
+import type { Cart, CartItem } from '@prisma/client';
 import { prisma } from '@/server/db/client';
 import { env } from '@/server/env';
 import { enqueueEmailJob } from '@/server/email/jobs';

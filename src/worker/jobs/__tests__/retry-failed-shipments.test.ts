@@ -2,8 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '@/server/db/client';
 import { resetDb } from '@/server/__tests__/helpers/reset-db';
 import type { LabelStorage } from '@/server/fulfilment/label-storage';
-import type { TryCreateShipmentDeps } from '@/server/fulfilment/service';
-import { retryFailedShipments } from '../retry-failed-shipments';
+import type {
+  TryCreateShipmentDeps,
+  TryCreateShipmentResult,
+} from '@/server/fulfilment/service';
+import {
+  retryFailedShipments,
+  type RetryFailedShipmentsDeps,
+} from '../retry-failed-shipments';
 
 const fakeStorage: LabelStorage = {
   put: async () => 'k',
@@ -11,15 +17,23 @@ const fakeStorage: LabelStorage = {
   delete: async () => {},
 };
 
-function buildDeps(opts: { tryCreate?: ReturnType<typeof vi.fn> } = {}) {
-  const deps = {
+type TryCreateFn = (
+  shipmentId: string,
+  deps: TryCreateShipmentDeps,
+) => Promise<TryCreateShipmentResult>;
+
+function buildDeps(opts: { tryCreate?: TryCreateFn } = {}): RetryFailedShipmentsDeps & {
+  tryCreateShipment: TryCreateFn;
+} {
+  const tryCreate: TryCreateFn =
+    opts.tryCreate ?? (async () => ({ ok: true }));
+  return {
     dhl: { createShipment: vi.fn() } as never,
     rm: { createShipment: vi.fn(), getLabel: vi.fn() } as never,
     storage: fakeStorage,
     sendLabelFailureAlert: vi.fn(),
-    tryCreateShipment: opts.tryCreate ?? vi.fn().mockResolvedValue({ ok: true }),
-  } satisfies TryCreateShipmentDeps & { tryCreateShipment: ReturnType<typeof vi.fn> };
-  return deps;
+    tryCreateShipment: vi.fn(tryCreate) as unknown as TryCreateFn,
+  };
 }
 
 async function seedShipment(opts: {
