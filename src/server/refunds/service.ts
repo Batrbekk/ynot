@@ -188,3 +188,118 @@ export async function refundPartialItems(
 
   return { refundId: refund.id, amountCents: refundAmount };
 }
+
+/**
+ * Refund a Return: sums prices of every accepted ReturnItem, calls Stripe
+ * for that amount, restocks the underlying OrderItems, and links the new
+ * RefundEvent back to the Return row.
+ *
+ * Wired in by `approveReturn` (Group K Task 66) via deps injection so the
+ * returns module doesn't statically depend on this one.
+ *
+ * - `acceptedItemIds` is the subset of `ReturnItem.id` (NOT OrderItem.id)
+ *   that the admin chose to accept on inspection. Items not in the list are
+ *   dropped on the floor — they remain on the Return row but contribute
+ *   neither refund nor restock.
+ * - The new RefundEvent has `returnId` set so the admin order page can
+ *   thread the refund back to the originating return.
+ * - Stock is restocked by `ReturnItem.quantity` per accepted item.
+ */
+export async function refundForReturn(
+  returnId: string,
+  acceptedItemIds: string[],
+): Promise<RefundResult> {
+  if (acceptedItemIds.length === 0) {
+    throw new Error('refundForReturn requires at least one accepted item');
+  }
+  const ret = await prisma.return.findUnique({
+    where: { id: returnId },
+    include: {
+      items: { include: { orderItem: true } },
+      order: { include: { payment: true } },
+    },
+  });
+  if (!ret) throw new Error(`Return ${returnId} not found`);
+  if (!ret.order.payment?.stripePaymentIntentId) {
+    throw new Error(`Order ${ret.orderId} has no Stripe payment intent`);
+  }
+  if (ret.order.payment.status !== 'CAPTURED') {
+    throw new Error(
+      `Order ${ret.orderId} payment is ${ret.order.payment.status}, cannot refund`,
+    );
+  }
+
+  const accepted = new Set(acceptedItemIds);
+  const acceptedRows = ret.items.filter((ri) => accepted.has(ri.id));
+  if (acceptedRows.length !== acceptedItemIds.length) {
+    throw new Error(
+      `One or more acceptedItemIds do not belong to Return ${ret.returnNumber}`,
+    );
+  }
+
+  const refundAmount = acceptedRows.reduce(
+    (s, ri) => s + ri.orderItem.unitPriceCents * ri.quantity,
+    0,
+  );
+  if (refundAmount <= 0) {
+    throw new Error(`Computed refund amount is zero for Return ${ret.returnNumber}`);
+  }
+
+  const remaining =
+    ret.order.payment.amountCents - ret.order.payment.refundedAmountCents;
+  if (refundAmount > remaining) {
+    throw new Error(
+      `Refund amount ${refundAmount} exceeds remaining ${remaining} on order ${ret.orderId}`,
+    );
+  }
+
+  const refund = await stripe.refunds.create({
+    payment_intent: ret.order.payment.stripePaymentIntentId,
+    amount: refundAmount,
+    metadata: {
+      orderId: ret.orderId,
+      returnId: ret.id,
+      reason: 'return_approved',
+    },
+  });
+
+  const newRefundedTotal =
+    ret.order.payment.refundedAmountCents + refundAmount;
+  const fullyRefunded = newRefundedTotal >= ret.order.payment.amountCents;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.refundEvent.create({
+      data: {
+        orderId: ret.orderId,
+        returnId: ret.id,
+        stripeRefundId: refund.id,
+        amountCents: refundAmount,
+        reason: 'return_approved',
+      },
+    });
+    await tx.payment.update({
+      where: { id: ret.order.payment!.id },
+      data: {
+        refundedAmountCents: newRefundedTotal,
+        ...(fullyRefunded ? { status: 'REFUNDED' } : {}),
+      },
+    });
+    for (const ri of acceptedRows) {
+      const oi = ri.orderItem;
+      if (oi.productId) {
+        await tx.productSize.update({
+          where: { productId_size: { productId: oi.productId, size: oi.size } },
+          data: { stock: { increment: ri.quantity } },
+        });
+      }
+    }
+  });
+
+  if (fullyRefunded &&
+      ret.order.status !== 'CANCELLED' &&
+      ret.order.status !== 'RETURNED') {
+    await updateStatus(ret.orderId, 'RETURNED', `refund: return_approved`);
+  }
+
+  return { refundId: refund.id, amountCents: refundAmount };
+}
