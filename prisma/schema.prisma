@@ -487,11 +487,14 @@ model OrderItem {
   currency        Currency       @default(GBP)
   quantity        Int
   isPreorder      Boolean        @default(false)
+  shipmentId      String?
+  shipment        Shipment?      @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
 
   returnItems     ReturnItem[]
 
   @@index([orderId])
   @@index([productId])
+  @@index([shipmentId])
 }
 
 model OrderStatusEvent {
@@ -532,6 +535,7 @@ model Shipment {
   cancelledAt       DateTime?
   attemptCount      Int             @default(0)
   lastAttemptError  String?
+  items             OrderItem[]
   events            ShipmentEvent[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
