@@ -17,7 +17,7 @@ export class RoyalMailClickDropProvider {
     return Buffer.from('PDF');
   }
 
-  async createReturnLabel(_originalOrderRef: string): Promise<CreateReturnLabelResult> {
+  async createReturnLabel(_input: CreateShipmentInput): Promise<CreateReturnLabelResult> {
     return { rmOrderId: 'rm_return_1', labelPdfBytes: Buffer.from('RETURN-PDF') };
   }
 }

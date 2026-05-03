@@ -151,3 +151,82 @@ describe('RoyalMailClickDropProvider.getLabel', () => {
     await expect(p.getLabel('nope')).rejects.toThrow(/Royal Mail.*getLabel.*404/);
   });
 });
+
+describe('RoyalMailClickDropProvider.createReturnLabel', () => {
+  it('uses TPS service code with sender/recipient swapped (warehouse becomes recipient)', async () => {
+    const labelPdf = Buffer.from('%PDF-RETURN');
+    let callCount = 0;
+    const fetchMock = vi.fn().mockImplementation(async (_url: string) => {
+      callCount += 1;
+      if (callCount === 1) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            createdOrders: [
+              {
+                orderIdentifier: 99887,
+                orderReference: 'RT-2026-00001',
+                trackingNumber: 'AB000RETURN',
+              },
+            ],
+            errorsCount: 0,
+            successCount: 1,
+          }),
+          text: async () => '',
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        arrayBuffer: async () =>
+          labelPdf.buffer.slice(
+            labelPdf.byteOffset,
+            labelPdf.byteOffset + labelPdf.byteLength,
+          ) as ArrayBuffer,
+      };
+    });
+
+    const p = new RoyalMailClickDropProvider({
+      apiKey: 'rm-key',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+
+    const result = await p.createReturnLabel({
+      ...baseInput,
+      orderRef: 'RT-2026-00001',
+    });
+
+    expect(result.rmOrderId).toBe('99887');
+    expect(result.labelPdfBytes.equals(labelPdf)).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    const [createUrl, createInit] = fetchMock.mock.calls[0]!;
+    expect(createUrl).toBe('https://api.parcel.royalmail.com/api/v1/orders');
+    const order = JSON.parse(createInit.body as string).items[0];
+    expect(order.postageDetails.serviceCode).toBe('TPS');
+    // warehouse becomes the recipient (parcel travels back to YNOT HQ)
+    expect(order.recipient.address.postcode).toBe('SW7 5QG');
+    expect(order.recipient.address.companyName).toBe('YNOT London');
+    // original customer becomes the sender
+    expect(order.sender.address.fullName).toBe('James Smith');
+    expect(order.sender.address.postcode).toBe('NW1 6XE');
+    expect(order.orderReference).toBe('RT-2026-00001');
+
+    const [labelUrl] = fetchMock.mock.calls[1]!;
+    expect(labelUrl).toBe('https://api.parcel.royalmail.com/api/v1/orders/99887/label');
+  });
+
+  it('throws on non-2xx during create', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 422,
+      text: async () => 'invalid',
+    });
+    const p = new RoyalMailClickDropProvider({
+      apiKey: 'rm',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    await expect(p.createReturnLabel(baseInput)).rejects.toThrow(/Royal Mail.*createShipment.*422/);
+  });
+});

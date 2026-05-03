@@ -102,6 +102,55 @@ export class RoyalMailClickDropProvider {
     };
   }
 
+  /**
+   * Create a return label: original Order's customer becomes the **sender**,
+   * the YNOT London warehouse becomes the **recipient**, service code is
+   * `TPS` (Tracked Returns). Returns the new rmOrderId + the PDF bytes
+   * fetched via {@link getLabel}.
+   */
+  async createReturnLabel(input: CreateShipmentInput): Promise<CreateReturnLabelResult> {
+    const body = {
+      items: [
+        buildOrderPayload(
+          input,
+          SERVICE_CODE_TRACKED_RETURNS,
+          // recipient = warehouse
+          {
+            fullName: WAREHOUSE.fullName,
+            companyName: WAREHOUSE.companyName,
+            addressLine1: WAREHOUSE.addressLine1,
+            addressLine2: WAREHOUSE.addressLine2,
+            city: WAREHOUSE.city,
+            postalCode: WAREHOUSE.postcode,
+            countryCode: WAREHOUSE.countryCode,
+            email: WAREHOUSE.email,
+            phone: WAREHOUSE.phone,
+          },
+          // sender = original recipient (the customer)
+          input.recipient,
+        ),
+      ],
+    };
+
+    const resp = await this.fetcher(`${RM_BASE}/orders`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`Royal Mail createShipment ${resp.status}: ${err}`);
+    }
+    const data = (await resp.json()) as RmCreateOrdersResponse;
+    const created = data.createdOrders?.[0];
+    if (!created || created.orderIdentifier === undefined) {
+      throw new Error('Royal Mail createReturnLabel returned no createdOrders');
+    }
+    const rmOrderId = String(created.orderIdentifier);
+    const labelPdfBytes = await this.getLabel(rmOrderId);
+    return { rmOrderId, labelPdfBytes };
+  }
+
   /** GET /orders/:id/label — binary PDF response. */
   async getLabel(rmOrderId: string): Promise<Buffer> {
     const resp = await this.fetcher(`${RM_BASE}/orders/${rmOrderId}/label`, {
