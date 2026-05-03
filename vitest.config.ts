@@ -13,7 +13,7 @@ const clientProject = {
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["src/server/**", "src/app/api/**/*.test.ts"],
+    exclude: ["src/server/**", "src/app/api/**/*.test.{ts,tsx}"],
     css: false,
   },
 };
@@ -23,6 +23,8 @@ const clientProject = {
 // project but the inline ProjectConfig type omits them; cast keeps the file
 // type-clean until vitest narrows the type.
 const serverProject = {
+  // React plugin so server-side React Email templates / tests can use JSX.
+  plugins: [react()],
   resolve: { alias: aliases },
   test: {
     name: "server",
@@ -30,8 +32,8 @@ const serverProject = {
     globals: true,
     setupFiles: ["./vitest.server.setup.ts"],
     include: [
-      "src/server/**/*.{test,spec}.ts",
-      "src/app/api/**/*.test.ts",
+      "src/server/**/*.{test,spec}.{ts,tsx}",
+      "src/app/api/**/*.test.{ts,tsx}",
       "scripts/**/*.{test,spec}.ts",
     ],
     pool: "forks",
