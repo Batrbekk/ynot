@@ -29,7 +29,11 @@ const serverProject = {
     environment: "node",
     globals: true,
     setupFiles: ["./vitest.server.setup.ts"],
-    include: ["src/server/**/*.{test,spec}.ts", "src/app/api/**/*.test.ts"],
+    include: [
+      "src/server/**/*.{test,spec}.ts",
+      "src/app/api/**/*.test.ts",
+      "scripts/**/*.{test,spec}.ts",
+    ],
     pool: "forks",
     poolOptions: { forks: { singleFork: true } },
     fileParallelism: false,
