@@ -1,26 +1,48 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ConsoleEmailService } from "../console";
 
 describe("ConsoleEmailService", () => {
-  it("prints the verification code to stderr", async () => {
-    const spy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const svc = new ConsoleEmailService();
-    await svc.sendVerificationCode("user@example.com", "483019");
-    const output = spy.mock.calls.map((c) => c[0]).join("");
-    spy.mockRestore();
-    expect(output).toContain("user@example.com");
-    expect(output).toContain("483019");
-    expect(output).toContain("Verification");
+  it("logs subject + text + attachment names to stderr", async () => {
+    const stderr: string[] = [];
+    const orig = process.stderr.write.bind(process.stderr);
+    process.stderr.write = ((chunk: unknown) => {
+      stderr.push(String(chunk));
+      return true;
+    }) as typeof process.stderr.write;
+    try {
+      const svc = new ConsoleEmailService();
+      const result = await svc.send({
+        to: "a@b.com",
+        subject: "Hello",
+        html: "<p>x</p>",
+        text: "x",
+        attachments: [{ filename: "label.pdf", content: Buffer.from("PDF") }],
+      });
+      expect(result.id).toMatch(/^console-/);
+    } finally {
+      process.stderr.write = orig;
+    }
+    const output = stderr.join("");
+    expect(output).toContain("Hello");
+    expect(output).toContain("a@b.com");
+    expect(output).toContain("label.pdf");
   });
 
-  it("prints the reset code to stderr", async () => {
-    const spy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const svc = new ConsoleEmailService();
-    await svc.sendPasswordResetCode("user@example.com", "271828");
-    const output = spy.mock.calls.map((c) => c[0]).join("");
-    spy.mockRestore();
-    expect(output).toContain("user@example.com");
-    expect(output).toContain("271828");
-    expect(output).toContain("Reset");
+  it("does not include attachment line when none provided", async () => {
+    const stderr: string[] = [];
+    const orig = process.stderr.write.bind(process.stderr);
+    process.stderr.write = ((chunk: unknown) => {
+      stderr.push(String(chunk));
+      return true;
+    }) as typeof process.stderr.write;
+    try {
+      const svc = new ConsoleEmailService();
+      await svc.send({ to: "u@x.com", subject: "Plain", html: "<p/>", text: "plain" });
+    } finally {
+      process.stderr.write = orig;
+    }
+    const output = stderr.join("");
+    expect(output).toContain("Plain");
+    expect(output).not.toContain("Attachment:");
   });
 });
