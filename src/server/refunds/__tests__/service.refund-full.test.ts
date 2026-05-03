@@ -51,7 +51,9 @@ describe('refundFull', () => {
   }
 
   it('calls Stripe with remaining amount, inserts RefundEvent, marks Payment REFUNDED, transitions Order to RETURNED', async () => {
-    const create = vi.fn(async () => ({ id: 're_full_1' }));
+    const create = vi.fn<(args: { payment_intent: string; amount: number; metadata: Record<string, string> }) => Promise<{ id: string }>>(
+      async () => ({ id: 're_full_1' }),
+    );
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { refunds: { create } },
     }));
@@ -87,7 +89,9 @@ describe('refundFull', () => {
   });
 
   it('refunds only the remaining amount when partial refund already applied', async () => {
-    const create = vi.fn(async () => ({ id: 're_full_2' }));
+    const create = vi.fn<(args: { payment_intent: string; amount: number; metadata: Record<string, string> }) => Promise<{ id: string }>>(
+      async () => ({ id: 're_full_2' }),
+    );
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { refunds: { create } },
     }));
@@ -101,7 +105,9 @@ describe('refundFull', () => {
   });
 
   it('skips status transition when order is already CANCELLED', async () => {
-    const create = vi.fn(async () => ({ id: 're_canc' }));
+    const create = vi.fn<(args: { payment_intent: string; amount: number; metadata: Record<string, string> }) => Promise<{ id: string }>>(
+      async () => ({ id: 're_canc' }),
+    );
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { refunds: { create } },
     }));

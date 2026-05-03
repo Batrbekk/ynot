@@ -55,7 +55,9 @@ describe('refundForReturn', () => {
   }
 
   it('sums accepted item prices, calls Stripe, restocks, links RefundEvent to Return', async () => {
-    const create = vi.fn(async () => ({ id: 're_for_return' }));
+    const create = vi.fn<(args: { payment_intent: string; amount: number; metadata: Record<string, string> }) => Promise<{ id: string }>>(
+      async () => ({ id: 're_for_return' }),
+    );
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { refunds: { create } },
     }));

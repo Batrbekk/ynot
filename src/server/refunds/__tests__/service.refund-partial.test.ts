@@ -45,7 +45,9 @@ describe('refundPartialItems', () => {
   }
 
   it('refunds the sum of selected items, restocks them, leaves Order DELIVERED', async () => {
-    const create = vi.fn(async () => ({ id: 're_partial' }));
+    const create = vi.fn<(args: { payment_intent: string; amount: number; metadata: Record<string, string> }) => Promise<{ id: string }>>(
+      async () => ({ id: 're_partial' }),
+    );
     vi.doMock('@/server/checkout/stripe', () => ({
       stripe: { refunds: { create } },
     }));

@@ -93,7 +93,7 @@ describe('releaseBatchForShipping', () => {
 
   it('marks batch SHIPPING and calls tryCreateShipment per unique Shipment', async () => {
     const { batch, orderA, orderB } = await seedBatchWithOrders();
-    const tryCreateShipment = vi.fn(async (shipmentId: string) => ({
+    const tryCreateShipment = vi.fn(async (_shipmentId: string) => ({
       ok: true,
     }));
     const shipmentDeps = fakeShipmentDeps();
