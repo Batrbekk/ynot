@@ -24,6 +24,7 @@ import { RefundRejected, type RefundRejectedProps } from "./refund-rejected";
 import { AbandonedCart1h, type AbandonedCart1hProps } from "./abandoned-cart-1h";
 import { AbandonedCart24h, type AbandonedCart24hProps } from "./abandoned-cart-24h";
 import { VerifyEmail, type VerifyEmailProps } from "./verify-email";
+import { PasswordReset, type PasswordResetProps } from "./password-reset";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -89,4 +90,10 @@ registerTemplate("VerifyEmail", async (payload) => {
   const p = payload as VerifyEmailProps;
   const { html, text } = await renderEmail(createElement(VerifyEmail, p));
   return { subject: "Verify your email — YNOT London", html, text };
+});
+
+registerTemplate("PasswordReset", async (payload) => {
+  const p = payload as PasswordResetProps;
+  const { html, text } = await renderEmail(createElement(PasswordReset, p));
+  return { subject: "Reset your YNOT London password", html, text };
 });
