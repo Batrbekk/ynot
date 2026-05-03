@@ -128,8 +128,66 @@ export class DhlExpressProvider implements ShippingRateProvider {
     };
   }
 
-  async landedCost(_input: LandedCostInput): Promise<LandedCostQuote> {
-    throw new Error('DhlExpressProvider.landedCost not yet implemented (Task 40)');
+  async landedCost(input: LandedCostInput): Promise<LandedCostQuote> {
+    const body = {
+      customerDetails: {
+        shipperDetails: {
+          postalCode: ORIGIN.postcode,
+          cityName: ORIGIN.city,
+          countryCode: ORIGIN.country,
+        },
+        receiverDetails: {
+          countryCode: input.destinationCountry,
+          postalCode: '00000',
+          cityName: '',
+        },
+      },
+      accounts: [{ typeCode: 'shipper', number: this.cfg.accountNumber }],
+      productCode: 'P',
+      unitOfMeasurement: 'metric',
+      currencyCode: 'GBP',
+      isCustomsDeclarable: true,
+      items: input.items.map((i, idx) => ({
+        number: idx + 1,
+        name: i.productSlug,
+        manufacturerCountry: i.countryOfOriginCode ?? 'GB',
+        partNumber: i.productSlug,
+        quantity: i.quantity,
+        quantityType: 'pcs',
+        unitPrice: i.unitPriceCents / 100,
+        unitPriceCurrency: 'GBP',
+        customsValue: (i.unitPriceCents * i.quantity) / 100,
+        customsValueCurrency: 'GBP',
+        commodityCode: i.hsCode ?? '6217.10.00',
+        weight: { netValue: i.weightGrams / 1000, grossValue: i.weightGrams / 1000 },
+      })),
+    };
+
+    const resp = await this.fetcher(`${DHL_BASE}/landed-cost`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`DHL Express landed-cost API ${resp.status}: ${err}`);
+    }
+    const data = (await resp.json()) as { products?: DhlProduct[] };
+    const product = data.products?.[0];
+    if (!product?.landedCost) {
+      throw new Error('DHL Express landed-cost returned no landedCost block');
+    }
+    return {
+      dutyCents: Math.round((product.landedCost.totalDutyAmount ?? 0) * 100),
+      taxCents: Math.round((product.landedCost.totalTaxAmount ?? 0) * 100),
+      currency: 'GBP',
+      breakdown: (product.items ?? []).map((it) => ({
+        productSlug: it.partNumber ?? '',
+        hsCode: it.commodityCode ?? null,
+        dutyCents: Math.round((it.dutyAmount ?? 0) * 100),
+        taxCents: Math.round((it.taxAmount ?? 0) * 100),
+      })),
+    };
   }
 
   async createShipment(_input: CreateShipmentInput): Promise<CreateShipmentResult> {

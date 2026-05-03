@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DhlExpressProvider } from '../dhl-express';
+import type { LandedCostInput } from '../provider';
 
 describe('DhlExpressProvider.getRate', () => {
   it('calls MyDHL rates endpoint and returns parsed quote', async () => {
@@ -122,5 +123,129 @@ describe('DhlExpressProvider.getRate', () => {
         declaredValueCents: 1,
       }),
     ).rejects.toThrow(/no products/i);
+  });
+});
+
+describe('DhlExpressProvider.landedCost', () => {
+  const sampleInput: LandedCostInput = {
+    destinationCountry: 'DE',
+    items: [
+      {
+        productSlug: 'silk-scarf',
+        hsCode: '6201',
+        weightGrams: 800,
+        unitPriceCents: 20000,
+        quantity: 1,
+        countryOfOriginCode: 'CN',
+      },
+    ],
+  };
+
+  it('calls landed-cost endpoint and parses dutyCents/taxCents', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        products: [
+          {
+            landedCost: { totalDutyAmount: 12.5, totalTaxAmount: 7.5, currency: 'GBP' },
+            items: [],
+          },
+        ],
+      }),
+      text: async () => '',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: 'a',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    const q = await p.landedCost(sampleInput);
+    expect(q.dutyCents).toBe(1250);
+    expect(q.taxCents).toBe(750);
+    expect(q.currency).toBe('GBP');
+    expect(q.breakdown).toEqual([]);
+
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('https://express.api.dhl.com/mydhlapi/landed-cost');
+    const body = JSON.parse(init.body as string);
+    expect(body.isCustomsDeclarable).toBe(true);
+    expect(body.items[0].partNumber).toBe('silk-scarf');
+    expect(body.items[0].commodityCode).toBe('6201');
+    expect(body.items[0].manufacturerCountry).toBe('CN');
+    expect(body.items[0].customsValue).toBe(200);
+  });
+
+  it('parses per-item breakdown', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        products: [
+          {
+            landedCost: { totalDutyAmount: 20, totalTaxAmount: 10 },
+            items: [
+              { partNumber: 'silk-scarf', commodityCode: '6201', dutyAmount: 20, taxAmount: 10 },
+            ],
+          },
+        ],
+      }),
+      text: async () => '',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: 'a',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    const q = await p.landedCost(sampleInput);
+    expect(q.breakdown).toEqual([
+      { productSlug: 'silk-scarf', hsCode: '6201', dutyCents: 2000, taxCents: 1000 },
+    ]);
+  });
+
+  it('throws on non-2xx', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: async () => 'bad gateway',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: 'a',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    await expect(p.landedCost(sampleInput)).rejects.toThrow(/DHL.*landed-cost.*502/);
+  });
+
+  it('falls back to GB origin and default HS code when not supplied', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ products: [{ landedCost: {} }] }),
+      text: async () => '',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: 'a',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    await p.landedCost({
+      destinationCountry: 'US',
+      items: [
+        {
+          productSlug: 'belt',
+          hsCode: null,
+          weightGrams: 200,
+          unitPriceCents: 5000,
+          quantity: 3,
+          countryOfOriginCode: null,
+        },
+      ],
+    });
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string);
+    expect(body.items[0].manufacturerCountry).toBe('GB');
+    expect(body.items[0].commodityCode).toBe('6217.10.00');
+    expect(body.items[0].customsValue).toBe(150); // 5000c * 3 / 100
   });
 });
