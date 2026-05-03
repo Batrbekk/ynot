@@ -40,6 +40,26 @@ interface DhlLandedCostItem {
   taxAmount?: number;
 }
 
+interface DhlShipmentResponse {
+  shipmentTrackingNumber?: string;
+  documents?: Array<{ typeCode?: string; content?: string }>;
+}
+
+const SHIPPER_CONTACT = {
+  fullName: 'YNOT London Despatch',
+  companyName: 'YNOT London',
+  email: 'hello@ynotlondon.com',
+  phone: '+44 20 0000 0000',
+} as const;
+
+const SHIPPER_ADDRESS = {
+  postalCode: ORIGIN.postcode,
+  cityName: ORIGIN.city,
+  countryCode: ORIGIN.country,
+  addressLine1: '13 Elvaston Place',
+  addressLine2: 'Flat 1',
+} as const;
+
 /**
  * Live MyDHL API client — used for international rates, landed cost, and
  * shipment creation. Authentication is HTTP Basic with `apiKey:apiSecret`.
@@ -190,7 +210,114 @@ export class DhlExpressProvider implements ShippingRateProvider {
     };
   }
 
-  async createShipment(_input: CreateShipmentInput): Promise<CreateShipmentResult> {
-    throw new Error('DhlExpressProvider.createShipment not yet implemented (Task 41)');
+  async createShipment(input: CreateShipmentInput): Promise<CreateShipmentResult> {
+    const plannedAt = new Date(Date.now() + 86_400_000).toISOString().slice(0, 19) + ' GMT+00:00';
+    const exportDeclaration = input.isInternational
+      ? {
+          lineItems: input.items.map((it, idx) => ({
+            number: idx + 1,
+            description: it.name,
+            price: it.unitPriceCents / 100,
+            priceCurrency: 'GBP',
+            quantity: { value: it.quantity, unitOfMeasurement: 'PCS' },
+            commodityCodes: [
+              { typeCode: 'outbound', value: it.hsCode ?? '6217.10.00' },
+            ],
+            exportReasonType: 'permanent',
+            manufacturerCountry: it.countryOfOriginCode ?? 'GB',
+            weight: {
+              netValue: it.weightGrams / 1000,
+              grossValue: it.weightGrams / 1000,
+            },
+          })),
+          invoice: {
+            number: input.orderRef,
+            date: new Date().toISOString().slice(0, 10),
+          },
+          exportReason: 'sale',
+        }
+      : undefined;
+
+    const body: Record<string, unknown> = {
+      plannedShippingDateAndTime: plannedAt,
+      productCode: 'P',
+      accounts: [{ typeCode: 'shipper', number: this.cfg.accountNumber }],
+      customerReferences: [{ value: input.orderRef, typeCode: 'CU' }],
+      customerDetails: {
+        shipperDetails: {
+          postalAddress: SHIPPER_ADDRESS,
+          contactInformation: SHIPPER_CONTACT,
+        },
+        receiverDetails: {
+          postalAddress: {
+            postalCode: input.recipient.postalCode,
+            cityName: input.recipient.city,
+            countryCode: input.recipient.countryCode,
+            addressLine1: input.recipient.addressLine1,
+            ...(input.recipient.addressLine2 ? { addressLine2: input.recipient.addressLine2 } : {}),
+          },
+          contactInformation: {
+            fullName: input.recipient.fullName,
+            companyName: input.recipient.companyName ?? input.recipient.fullName,
+            email: input.recipient.email ?? '',
+            phone: input.recipient.phone ?? '',
+          },
+        },
+      },
+      content: {
+        unitOfMeasurement: 'metric',
+        isCustomsDeclarable: input.isInternational,
+        description: input.items.map((it) => it.name).join(', ').slice(0, 70),
+        incoterm: input.isInternational ? 'DDP' : 'DAP',
+        declaredValue: input.declaredValueCents / 100,
+        declaredValueCurrency: 'GBP',
+        packages: [
+          {
+            weight: input.weightGrams / 1000,
+            dimensions: { length: 30, width: 25, height: 5 },
+            customerReferences: [{ value: input.orderRef, typeCode: 'CU' }],
+          },
+        ],
+        ...(exportDeclaration ? { exportDeclaration } : {}),
+      },
+      outputImageProperties: {
+        printerDPI: 300,
+        encodingFormat: 'pdf',
+        imageOptions: [
+          { typeCode: 'label', templateName: 'ECOM26_84_A4_001' },
+          ...(input.isInternational
+            ? [{ typeCode: 'invoice', templateName: 'COMMERCIAL_INVOICE_P_10' }]
+            : []),
+        ],
+      },
+    };
+
+    const resp = await this.fetcher(`${DHL_BASE}/shipments`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`DHL Express createShipment ${resp.status}: ${err}`);
+    }
+
+    const data = (await resp.json()) as DhlShipmentResponse;
+    const trackingNumber = data.shipmentTrackingNumber;
+    if (!trackingNumber) {
+      throw new Error('DHL Express createShipment returned no shipmentTrackingNumber');
+    }
+    const labelDoc = data.documents?.find((d) => d.typeCode === 'label');
+    if (!labelDoc?.content) {
+      throw new Error('DHL Express createShipment returned no label document');
+    }
+    const customsDoc = data.documents?.find((d) => d.typeCode === 'invoice');
+    return {
+      trackingNumber,
+      labelPdfBytes: Buffer.from(labelDoc.content, 'base64'),
+      customsInvoicePdfBytes: customsDoc?.content
+        ? Buffer.from(customsDoc.content, 'base64')
+        : undefined,
+    };
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DhlExpressProvider } from '../dhl-express';
-import type { LandedCostInput } from '../provider';
+import type { CreateShipmentInput, LandedCostInput } from '../provider';
 
 describe('DhlExpressProvider.getRate', () => {
   it('calls MyDHL rates endpoint and returns parsed quote', async () => {
@@ -247,5 +247,130 @@ describe('DhlExpressProvider.landedCost', () => {
     expect(body.items[0].manufacturerCountry).toBe('GB');
     expect(body.items[0].commodityCode).toBe('6217.10.00');
     expect(body.items[0].customsValue).toBe(150); // 5000c * 3 / 100
+  });
+});
+
+describe('DhlExpressProvider.createShipment', () => {
+  const intlInput: CreateShipmentInput = {
+    orderRef: 'YN-2026-00042',
+    recipient: {
+      fullName: 'Anna Schmidt',
+      addressLine1: 'Friedrichstrasse 12',
+      city: 'Berlin',
+      postalCode: '10117',
+      countryCode: 'DE',
+      email: 'anna@example.com',
+      phone: '+49 30 1234567',
+    },
+    items: [
+      {
+        productSlug: 'silk-scarf',
+        name: 'Silk Scarf — Emerald',
+        sku: 'SCRF-EM-01',
+        quantity: 1,
+        unitPriceCents: 24000,
+        weightGrams: 80,
+        hsCode: '6214.10',
+        countryOfOriginCode: 'GB',
+      },
+    ],
+    weightGrams: 80,
+    subtotalCents: 24000,
+    declaredValueCents: 24000,
+    isInternational: true,
+  };
+
+  it('posts to /shipments and decodes label + invoice PDFs from base64', async () => {
+    const labelPdf = Buffer.from('PDFLABEL').toString('base64');
+    const invoicePdf = Buffer.from('PDFINVOICE').toString('base64');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        shipmentTrackingNumber: '1234567890',
+        documents: [
+          { typeCode: 'label', content: labelPdf },
+          { typeCode: 'invoice', content: invoicePdf },
+        ],
+      }),
+      text: async () => '',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: '230200799',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+
+    const r = await p.createShipment(intlInput);
+    expect(r.trackingNumber).toBe('1234567890');
+    expect(r.labelPdfBytes.toString()).toBe('PDFLABEL');
+    expect(r.customsInvoicePdfBytes?.toString()).toBe('PDFINVOICE');
+
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('https://express.api.dhl.com/mydhlapi/shipments');
+    const body = JSON.parse(init.body as string);
+    expect(body.accounts[0].number).toBe('230200799');
+    expect(body.customerDetails.shipperDetails.contactInformation.companyName).toBe('YNOT London');
+    expect(body.customerDetails.receiverDetails.contactInformation.fullName).toBe('Anna Schmidt');
+    expect(body.customerDetails.receiverDetails.postalAddress.countryCode).toBe('DE');
+    expect(body.content.isCustomsDeclarable).toBe(true);
+    expect(body.content.exportDeclaration.lineItems[0].commodityCodes[0].value).toBe('6214.10');
+    expect(body.content.unitOfMeasurement).toBe('metric');
+    expect(body.customerReferences[0].value).toBe('YN-2026-00042');
+  });
+
+  it('omits customs block + invoice PDF for domestic shipments', async () => {
+    const labelPdf = Buffer.from('LBL').toString('base64');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        shipmentTrackingNumber: 'GB123',
+        documents: [{ typeCode: 'label', content: labelPdf }],
+      }),
+      text: async () => '',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: 'a',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    const r = await p.createShipment({ ...intlInput, isInternational: false });
+    expect(r.trackingNumber).toBe('GB123');
+    expect(r.customsInvoicePdfBytes).toBeUndefined();
+
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string);
+    expect(body.content.isCustomsDeclarable).toBe(false);
+    expect(body.content.exportDeclaration).toBeUndefined();
+  });
+
+  it('throws on non-2xx', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => 'internal',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: 'a',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    await expect(p.createShipment(intlInput)).rejects.toThrow(/DHL.*createShipment.*500/);
+  });
+
+  it('throws when label document is missing from response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ shipmentTrackingNumber: '999', documents: [] }),
+      text: async () => '',
+    });
+    const p = new DhlExpressProvider({
+      apiKey: 'k',
+      apiSecret: 's',
+      accountNumber: 'a',
+      fetcher: fetchMock as unknown as typeof fetch,
+    });
+    await expect(p.createShipment(intlInput)).rejects.toThrow(/no label document/i);
   });
 });
