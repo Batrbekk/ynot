@@ -22,6 +22,7 @@ import {
 import { RefundIssued, type RefundIssuedProps } from "./refund-issued";
 import { RefundRejected, type RefundRejectedProps } from "./refund-rejected";
 import { AbandonedCart1h, type AbandonedCart1hProps } from "./abandoned-cart-1h";
+import { AbandonedCart24h, type AbandonedCart24hProps } from "./abandoned-cart-24h";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -75,4 +76,10 @@ registerTemplate("AbandonedCart1h", async (payload) => {
   const p = payload as AbandonedCart1hProps;
   const { html, text } = await renderEmail(createElement(AbandonedCart1h, p));
   return { subject: "You left something behind", html, text };
+});
+
+registerTemplate("AbandonedCart24h", async (payload) => {
+  const p = payload as AbandonedCart24hProps;
+  const { html, text } = await renderEmail(createElement(AbandonedCart24h, p));
+  return { subject: "Your cart, plus 10% off", html, text };
 });
