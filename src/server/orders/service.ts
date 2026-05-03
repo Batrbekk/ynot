@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { OrderStatus } from '@prisma/client';
+import type { OrderStatus, Prisma } from '@prisma/client';
 import { prisma } from '@/server/db/client';
 import { sendTemplatedEmail } from '@/server/email/send';
 import { getEmailService } from '@/server/email';
@@ -112,3 +112,68 @@ export async function cancelOrder(
     });
   }
 }
+
+export interface ListForAdminOpts {
+  status?: OrderStatus;
+  carrier?: 'ROYAL_MAIL' | 'DHL';
+  country?: string;
+  search?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+/**
+ * Paginated admin order list. Cursor-based on `Order.id`; sorted newest first.
+ *
+ * Filters compose with AND. The `search` filter is a case-insensitive
+ * substring match across order number, customer surname, and tracking number.
+ * Default limit is 50.
+ */
+export async function listForAdmin(opts: ListForAdminOpts) {
+  const where: Prisma.OrderWhereInput = {};
+  if (opts.status) where.status = opts.status;
+  if (opts.carrier) where.carrier = opts.carrier;
+  if (opts.country) where.shipCountry = opts.country;
+  if (opts.search) {
+    where.OR = [
+      { orderNumber: { contains: opts.search, mode: 'insensitive' } },
+      { shipLastName: { contains: opts.search, mode: 'insensitive' } },
+      { trackingNumber: { contains: opts.search, mode: 'insensitive' } },
+    ];
+  }
+  return prisma.order.findMany({
+    where,
+    take: opts.limit ?? 50,
+    skip: opts.cursor ? 1 : 0,
+    cursor: opts.cursor ? { id: opts.cursor } : undefined,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      user: { select: { email: true, name: true } },
+      shipments: { select: { id: true, trackingNumber: true, carrier: true } },
+    },
+  });
+}
+
+/**
+ * Full order detail for the admin order screen. Eager-loads the bits the
+ * Phase 5 admin pages render: items (with product weight for label preview),
+ * every shipment with its events, payment, status history, refund events,
+ * and returns.
+ */
+export async function getForAdmin(orderId: string) {
+  return prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: { include: { product: { select: { weightGrams: true } } } },
+      shipments: { include: { events: { orderBy: { occurredAt: 'asc' } } } },
+      payment: true,
+      events: { orderBy: { createdAt: 'asc' } },
+      refundEvents: { orderBy: { createdAt: 'asc' } },
+      returns: { include: { items: true } },
+      user: { select: { id: true, email: true, name: true } },
+    },
+  });
+}
+
+export type AdminOrderSummary = Awaited<ReturnType<typeof listForAdmin>>[number];
+export type AdminOrderDetail = Awaited<ReturnType<typeof getForAdmin>>;
