@@ -44,7 +44,20 @@ export async function POST(req: Request): Promise<NextResponse> {
   });
 
   const code = await issueVerificationToken("verify", parsed.data.email);
-  await getEmailService().sendVerificationCode(parsed.data.email, code);
+  const text = [
+    "Welcome to YNOT London.",
+    "",
+    `Your verification code is: ${code}`,
+    "",
+    "This code expires in 15 minutes.",
+    "If you did not request it, please ignore this email.",
+  ].join("\n");
+  await getEmailService().send({
+    to: parsed.data.email,
+    subject: "Your YNOT verification code",
+    html: `<p>${text.replace(/\n/g, "<br>")}</p>`,
+    text,
+  });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

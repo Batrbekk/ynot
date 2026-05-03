@@ -38,7 +38,20 @@ export async function POST(req: Request): Promise<NextResponse> {
   const user = await findUserByEmail(parsed.data.email);
   if (user && user.emailVerifiedAt) {
     const code = await issueVerificationToken("reset", parsed.data.email);
-    await getEmailService().sendPasswordResetCode(parsed.data.email, code);
+    const text = [
+      "We received a request to reset your YNOT password.",
+      "",
+      `Your reset code is: ${code}`,
+      "",
+      "This code expires in 15 minutes.",
+      "If you did not request a password reset, you can safely ignore this email.",
+    ].join("\n");
+    await getEmailService().send({
+      to: parsed.data.email,
+      subject: "Reset your YNOT password",
+      html: `<p>${text.replace(/\n/g, "<br>")}</p>`,
+      text,
+    });
   }
 
   return NextResponse.json({ ok: true });
