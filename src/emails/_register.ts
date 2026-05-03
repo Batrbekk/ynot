@@ -25,6 +25,14 @@ import { AbandonedCart1h, type AbandonedCart1hProps } from "./abandoned-cart-1h"
 import { AbandonedCart24h, type AbandonedCart24hProps } from "./abandoned-cart-24h";
 import { VerifyEmail, type VerifyEmailProps } from "./verify-email";
 import { PasswordReset, type PasswordResetProps } from "./password-reset";
+import {
+  AdminAlertLabelFailure,
+  type AdminAlertLabelFailureProps,
+} from "./admin-alert-label-failure";
+import {
+  AdminAlertTrackingStale,
+  type AdminAlertTrackingStaleProps,
+} from "./admin-alert-tracking-stale";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -96,4 +104,20 @@ registerTemplate("PasswordReset", async (payload) => {
   const p = payload as PasswordResetProps;
   const { html, text } = await renderEmail(createElement(PasswordReset, p));
   return { subject: "Reset your YNOT London password", html, text };
+});
+
+registerTemplate("AdminAlertLabelFailure", async (payload) => {
+  const p = payload as AdminAlertLabelFailureProps;
+  const { html, text } = await renderEmail(createElement(AdminAlertLabelFailure, p));
+  return { subject: `[YNOT alert] Label failed for order ${p.orderNumber}`, html, text };
+});
+
+registerTemplate("AdminAlertTrackingStale", async (payload) => {
+  const p = payload as AdminAlertTrackingStaleProps;
+  const { html, text } = await renderEmail(createElement(AdminAlertTrackingStale, p));
+  return {
+    subject: `[YNOT alert] Tracking sync stale (${p.affectedCount} orders)`,
+    html,
+    text,
+  };
 });
