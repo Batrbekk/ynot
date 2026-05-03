@@ -65,6 +65,9 @@ export async function handleWebhook(
     case 'payment_intent.payment_failed':
       await handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
       break;
+    case 'charge.refunded':
+      await handleChargeRefunded(event.data.object as Stripe.Charge);
+      break;
     default:
       // Unhandled events still get 200 so Stripe won't retry.
       break;
@@ -250,4 +253,61 @@ async function handlePaymentFailed(pi: Stripe.PaymentIntent): Promise<void> {
     });
     await tx.payment.update({ where: { id: payment.id }, data: { status: 'FAILED' } });
   });
+}
+
+/**
+ * Stripe `charge.refunded` reconciles the Payment row with the actual amount
+ * Stripe has refunded so far. Handles partial and full refunds; safe to
+ * replay because we short-circuit when no drift exists.
+ *
+ * Order status is only flipped → RETURNED when the refund covers the full
+ * captured amount. Already-CANCELLED orders are skipped (admin cancel
+ * already drove their lifecycle). PENDING_PAYMENT/PAYMENT_FAILED orders are
+ * also skipped — a refund there is impossible by the time the state machine
+ * is concerned.
+ */
+async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
+  const piId = typeof charge.payment_intent === 'string'
+    ? charge.payment_intent
+    : charge.payment_intent?.id;
+  if (!piId) return;
+  const payment = await prisma.payment.findUnique({
+    where: { stripePaymentIntentId: piId },
+  });
+  if (!payment) return;
+
+  const refunded = charge.amount_refunded;
+  if (refunded === payment.refundedAmountCents) return; // no drift, idempotent
+
+  const fullyRefunded = refunded >= payment.amountCents;
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      refundedAmountCents: refunded,
+      status: fullyRefunded ? 'REFUNDED' : payment.status,
+    },
+  });
+
+  if (!fullyRefunded) return;
+
+  const order = await prisma.order.findUnique({ where: { id: payment.orderId } });
+  if (!order) return;
+  // Don't try to drive RETURNED from terminal/unsettled states.
+  if (
+    order.status === 'CANCELLED' ||
+    order.status === 'RETURNED' ||
+    order.status === 'PENDING_PAYMENT' ||
+    order.status === 'PAYMENT_FAILED'
+  ) {
+    return;
+  }
+  try {
+    await updateStatus(order.id, 'RETURNED', 'fully refunded via Stripe');
+  } catch (err) {
+    process.stderr.write(
+      `[checkout/webhook] charge.refunded → RETURNED transition failed for ${order.id}: ${
+        err instanceof Error ? err.message : String(err)
+      }\n`,
+    );
+  }
 }

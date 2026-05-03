@@ -262,3 +262,137 @@ describe('handlePaymentFailed', () => {
     expect(stock.stock).toBe(3); // 2 + released 1
   });
 });
+
+describe('handleChargeRefunded', () => {
+  beforeEach(async () => {
+    vi.resetModules();
+    await resetDb();
+  });
+
+  async function seedShippedOrder(opts: { paymentIntentId?: string } = {}) {
+    const product = await prisma.product.create({
+      data: {
+        slug: 'cr-' + Math.random().toString(36).slice(2, 6),
+        name: 'P', priceCents: 5000, currency: 'GBP',
+        description: '', materials: '', care: '', sizing: '',
+        sizes: { create: [{ size: 'S', stock: 5 }] },
+        images: { create: [{ url: '/x.jpg', alt: '', sortOrder: 0 }] },
+      },
+    });
+    return prisma.order.create({
+      data: {
+        orderNumber: 'YN-CR-' + Math.random().toString(36).slice(2, 6),
+        status: 'SHIPPED',
+        subtotalCents: 5000, shippingCents: 0, discountCents: 0, totalCents: 5000, currency: 'GBP',
+        carrier: 'ROYAL_MAIL', shipFirstName: 'A', shipLastName: 'B', shipLine1: '1', shipCity: 'L',
+        shipPostcode: 'SW1', shipCountry: 'GB', shipPhone: '+44',
+        items: { create: [{ productId: product.id, productSlug: product.slug, productName: 'P',
+          productImage: '/x.jpg', colour: 'Black', size: 'S',
+          unitPriceCents: 5000, currency: 'GBP', quantity: 1 }] },
+        payment: { create: {
+          stripePaymentIntentId: opts.paymentIntentId ?? 'pi_cr_test',
+          status: 'CAPTURED', amountCents: 5000, currency: 'GBP',
+          refundedAmountCents: 0,
+        } },
+      },
+      include: { payment: true },
+    });
+  }
+
+  it('full refund flips Order to RETURNED + Payment to REFUNDED', async () => {
+    const order = await seedShippedOrder();
+    const fakeEvent = {
+      id: 'evt_cr_full', type: 'charge.refunded',
+      data: { object: { payment_intent: 'pi_cr_test', amount_refunded: 5000 } as unknown as import('stripe').default.Charge },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+    await handleWebhook({ rawBody: '{}', signature: 's' });
+
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(o.status).toBe('RETURNED');
+    expect(o.payment?.status).toBe('REFUNDED');
+    expect(o.payment?.refundedAmountCents).toBe(5000);
+  });
+
+  it('partial refund updates refundedAmountCents but not Order/Payment status', async () => {
+    const order = await seedShippedOrder();
+    const fakeEvent = {
+      id: 'evt_cr_part', type: 'charge.refunded',
+      data: { object: { payment_intent: 'pi_cr_test', amount_refunded: 2000 } as unknown as import('stripe').default.Charge },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+    await handleWebhook({ rawBody: '{}', signature: 's' });
+
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(o.status).toBe('SHIPPED');
+    expect(o.payment?.status).toBe('CAPTURED');
+    expect(o.payment?.refundedAmountCents).toBe(2000);
+  });
+
+  it('is idempotent — second event with same amount is a no-op', async () => {
+    const order = await seedShippedOrder();
+    await prisma.payment.update({
+      where: { orderId: order.id },
+      data: { refundedAmountCents: 5000, status: 'REFUNDED' },
+    });
+    await prisma.order.update({ where: { id: order.id }, data: { status: 'RETURNED' } });
+
+    const fakeEvent = {
+      id: 'evt_cr_replay', type: 'charge.refunded',
+      data: { object: { payment_intent: 'pi_cr_test', amount_refunded: 5000 } as unknown as import('stripe').default.Charge },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+    await handleWebhook({ rawBody: '{}', signature: 's' });
+
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(o.status).toBe('RETURNED');
+    expect(o.payment?.status).toBe('REFUNDED');
+    const eventCount = await prisma.orderStatusEvent.count({
+      where: { orderId: order.id, status: 'RETURNED' },
+    });
+    expect(eventCount).toBe(0); // no spurious event from replay
+  });
+
+  it('skips Order status flip when already CANCELLED', async () => {
+    const order = await seedShippedOrder();
+    // Forge a non-default initial state: cancel the order before refund arrives.
+    await prisma.order.update({ where: { id: order.id }, data: { status: 'CANCELLED' } });
+
+    const fakeEvent = {
+      id: 'evt_cr_cancel', type: 'charge.refunded',
+      data: { object: { payment_intent: 'pi_cr_test', amount_refunded: 5000 } as unknown as import('stripe').default.Charge },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+    await handleWebhook({ rawBody: '{}', signature: 's' });
+
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(o.status).toBe('CANCELLED');
+    expect(o.payment?.status).toBe('REFUNDED');
+    expect(o.payment?.refundedAmountCents).toBe(5000);
+  });
+
+  it('returns 200 silently when payment intent is unknown', async () => {
+    const fakeEvent = {
+      id: 'evt_cr_orphan', type: 'charge.refunded',
+      data: { object: { payment_intent: 'pi_unknown', amount_refunded: 100 } as unknown as import('stripe').default.Charge },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+    const r = await handleWebhook({ rawBody: '{}', signature: 's' });
+    expect(r.status).toBe(200);
+  });
+});
