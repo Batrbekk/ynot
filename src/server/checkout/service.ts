@@ -6,6 +6,7 @@ import { getOrCreateGuestUser } from '@/server/repositories/user.repo';
 import { getShippingProvider } from '@/server/shipping/zones';
 import { nextOrderNumber } from './order-number';
 import { signOrderToken } from './order-token';
+import { splitOrderIntoShipments } from '@/server/orders/shipments';
 import type { ShippingAddressT } from '@/lib/schemas/checkout';
 import type { AttributionPayload } from '@/server/attribution/cookie';
 
@@ -144,7 +145,7 @@ export async function createOrderAndPaymentIntent(
             unitPriceCents: i.unitPriceCents,
             currency: 'GBP',
             quantity: i.quantity,
-            isPreorder: false,
+            isPreorder: i.isPreorder,
           })),
         },
         payment: {
@@ -158,8 +159,25 @@ export async function createOrderAndPaymentIntent(
           create: { status: 'PENDING_PAYMENT', note: 'Order created' },
         },
       },
-      include: { payment: true },
+      include: { payment: true, items: true },
     });
+
+    // 9. Split items into Shipments. One in-stock group + one per preorder
+    // batch. `splitOrderIntoShipments` is pure; we persist the result here so
+    // every Order leaves checkout with at least one Shipment row.
+    const groups = splitOrderIntoShipments(created.items, created.shipCountry);
+    for (const group of groups) {
+      const shipment = await tx.shipment.create({
+        data: {
+          orderId: created.id,
+          carrier: group.carrier,
+        },
+      });
+      await tx.orderItem.updateMany({
+        where: { id: { in: group.itemIds } },
+        data: { shipmentId: shipment.id },
+      });
+    }
 
     return created;
   });

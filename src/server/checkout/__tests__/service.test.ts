@@ -86,6 +86,60 @@ describe('createOrderAndPaymentIntent', () => {
     ).rejects.toThrow(/stock/i);
   });
 
+  it('creates Shipments and links each OrderItem.shipmentId', async () => {
+    mockStripeSdk();
+    const { createOrderAndPaymentIntent } = await import('../service');
+    const { cart, product } = await seedCartWithItem({ stock: 3 });
+
+    const result = await createOrderAndPaymentIntent({
+      cartId: cart.id,
+      user: null,
+      address: {
+        email: 'g@x.com', firstName: 'G', lastName: 'X',
+        line1: '1 St', city: 'London', postcode: 'SW1', countryCode: 'GB', phone: '+440000000000',
+      },
+      methodId: 'method-uk-rm-tracked48',
+      attribution: null,
+    });
+
+    const shipments = await prisma.shipment.findMany({
+      where: { orderId: result.orderId }, include: { items: true },
+    });
+    expect(shipments).toHaveLength(1);
+    expect(shipments[0].carrier).toBe('ROYAL_MAIL');
+    expect(shipments[0].items).toHaveLength(1);
+    expect(shipments[0].items[0].productId).toBe(product.id);
+
+    const item = await prisma.orderItem.findFirstOrThrow({
+      where: { orderId: result.orderId },
+    });
+    expect(item.shipmentId).toBe(shipments[0].id);
+  });
+
+  it('non-UK destination produces a DHL Shipment', async () => {
+    mockStripeSdk();
+    const { createOrderAndPaymentIntent } = await import('../service');
+    const { cart } = await seedCartWithItem({ stock: 3 });
+
+    const result = await createOrderAndPaymentIntent({
+      cartId: cart.id,
+      user: null,
+      address: {
+        email: 'g@x.com', firstName: 'G', lastName: 'X',
+        line1: '1 Berliner Str', city: 'Berlin', postcode: '10115',
+        countryCode: 'DE', phone: '+490000000000',
+      },
+      methodId: 'method-intl-dhl-express',
+      attribution: null,
+    });
+
+    const shipments = await prisma.shipment.findMany({
+      where: { orderId: result.orderId },
+    });
+    expect(shipments).toHaveLength(1);
+    expect(shipments[0].carrier).toBe('DHL');
+  });
+
   it('reuses existing ghost user for the same email', async () => {
     mockStripeSdk();
     const { createOrderAndPaymentIntent } = await import('../service');
