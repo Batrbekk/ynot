@@ -94,6 +94,109 @@ describe('handlePaymentSucceeded', () => {
     expect(o.payment?.status).toBe('CAPTURED');
   });
 
+  it('calls tryCreateShipment for in-stock-eligible Shipments and sends OrderReceipt', async () => {
+    const { order } = await seedPendingOrder();
+    // Attach a user (with email) and a Shipment containing the existing item.
+    const user = await prisma.user.create({
+      data: { email: 'recv@x.com', name: 'R', isGuest: true },
+    });
+    await prisma.order.update({ where: { id: order.id }, data: { userId: user.id } });
+    const shipment = await prisma.shipment.create({
+      data: { orderId: order.id, carrier: 'ROYAL_MAIL' },
+    });
+    await prisma.orderItem.updateMany({
+      where: { orderId: order.id }, data: { shipmentId: shipment.id },
+    });
+
+    const fakeEvent = {
+      id: 'evt_succ_3', type: 'payment_intent.succeeded',
+      data: { object: { id: 'pi_test_succ' } as unknown as import('stripe').default.PaymentIntent },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+
+    const tryCreateShipment = vi.fn(async (id: string) => {
+      // Mark the shipment as if a label were generated, so PROCESSING transition fires.
+      await prisma.shipment.update({
+        where: { id }, data: { labelGeneratedAt: new Date(), trackingNumber: 'RB-X' },
+      });
+      return { ok: true };
+    });
+    const send = vi.fn(async () => ({ id: 'em_1' }));
+
+    await handleWebhook(
+      { rawBody: '{}', signature: 's' },
+      { tryCreateShipment, emailService: { send } },
+    );
+
+    expect(tryCreateShipment).toHaveBeenCalledTimes(1);
+    expect(tryCreateShipment).toHaveBeenCalledWith(shipment.id);
+    expect(send).toHaveBeenCalledTimes(1);
+    const sent = send.mock.calls[0][0];
+    expect(sent.to).toBe('recv@x.com');
+    expect(sent.subject).toContain(order.orderNumber);
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
+    expect(o.status).toBe('PROCESSING');
+  });
+
+  it('skips shipments that contain a preorder item', async () => {
+    const { order } = await seedPendingOrder();
+    const shipment = await prisma.shipment.create({
+      data: { orderId: order.id, carrier: 'ROYAL_MAIL' },
+    });
+    // Mark the existing OrderItem as preorder + link it to the shipment.
+    await prisma.orderItem.updateMany({
+      where: { orderId: order.id }, data: { shipmentId: shipment.id, isPreorder: true },
+    });
+
+    const fakeEvent = {
+      id: 'evt_succ_4', type: 'payment_intent.succeeded',
+      data: { object: { id: 'pi_test_succ' } as unknown as import('stripe').default.PaymentIntent },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+    const tryCreateShipment = vi.fn(async () => ({ ok: true }));
+    const send = vi.fn(async () => ({ id: 'em_2' }));
+    await handleWebhook(
+      { rawBody: '{}', signature: 's' },
+      { tryCreateShipment, emailService: { send } },
+    );
+    expect(tryCreateShipment).not.toHaveBeenCalled();
+    // Order stays in NEW because no label was generated.
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
+    expect(o.status).toBe('NEW');
+  });
+
+  it('does not transition to PROCESSING when no shipment generated a label', async () => {
+    const { order } = await seedPendingOrder();
+    const shipment = await prisma.shipment.create({
+      data: { orderId: order.id, carrier: 'ROYAL_MAIL' },
+    });
+    await prisma.orderItem.updateMany({
+      where: { orderId: order.id }, data: { shipmentId: shipment.id },
+    });
+    const fakeEvent = {
+      id: 'evt_succ_5', type: 'payment_intent.succeeded',
+      data: { object: { id: 'pi_test_succ' } as unknown as import('stripe').default.PaymentIntent },
+    };
+    vi.doMock('@/server/checkout/stripe', () => ({
+      stripe: { webhooks: { constructEvent: () => fakeEvent }, paymentIntents: { create: vi.fn(), retrieve: vi.fn() } },
+    }));
+    const { handleWebhook } = await import('../webhook');
+    const tryCreateShipment = vi.fn(async () => ({ ok: false })); // carrier failed
+    const send = vi.fn(async () => ({ id: 'em_3' }));
+    await handleWebhook(
+      { rawBody: '{}', signature: 's' },
+      { tryCreateShipment, emailService: { send } },
+    );
+    const o = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
+    expect(o.status).toBe('NEW');
+  });
+
   it('increments promo.usageCount + creates PromoRedemption', async () => {
     const { order, promoId } = await seedPendingOrder({ promoCode: 'WELCOME10' });
     const fakeEvent = {
