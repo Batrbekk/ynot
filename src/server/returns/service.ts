@@ -8,6 +8,7 @@ import type { LabelStorage } from '@/server/fulfilment/label-storage';
 import type { RoyalMailClickDropProvider } from '@/server/shipping/royal-mail-click-drop';
 import { ReturnInstructionsUk } from '@/emails/return-instructions-uk';
 import { ReturnInstructionsInternational } from '@/emails/return-instructions-international';
+import { RefundIssued } from '@/emails/refund-issued';
 import { isWithinReturnWindow, returnLabelPolicy } from './policy';
 import { nextReturnNumber } from './return-number';
 import { buildAndStoreCustomsDeclaration, RETURN_ADDRESS } from './customs';
@@ -214,6 +215,103 @@ type OrderWithBits = Prisma.OrderGetPayload<{
 type ReturnWithItems = Prisma.ReturnGetPayload<{
   include: { items: { include: { orderItem: true } } };
 }>;
+
+export interface ApproveReturnInput {
+  acceptedItemIds: string[];
+  inspectionNotes?: string;
+  actorId: string;
+}
+
+export interface ApproveReturnDeps {
+  /**
+   * Inject `refundForReturn` from `@/server/refunds/service` (Group L Task 70).
+   * Deps-injected so this module doesn't statically depend on the refund
+   * subsystem — matches the pattern used by `OrderService.cancelOrder`.
+   */
+  refundForReturn: (
+    returnId: string,
+    acceptedItemIds: string[],
+  ) => Promise<{ refundId: string; amountCents: number }>;
+  emailService?: EmailService;
+}
+
+/**
+ * Admin approves a return: triggers refund for accepted items, marks Return
+ * APPROVED, sends `RefundIssued` email.
+ *
+ * The accepted-items list is a strict subset of the Return's items (every id
+ * must be a `ReturnItem.id` on this Return). Restocking happens inside the
+ * deps-injected refund call, not here — see `refundForReturn`.
+ */
+export async function approveReturn(
+  returnId: string,
+  input: ApproveReturnInput,
+  deps: ApproveReturnDeps,
+): Promise<Return> {
+  const ret = await prisma.return.findUnique({
+    where: { id: returnId },
+    include: {
+      items: { include: { orderItem: true } },
+      order: { include: { user: true } },
+    },
+  });
+  if (!ret) throw new Error(`Return ${returnId} not found`);
+  if (ret.status === 'APPROVED' || ret.status === 'REJECTED' ||
+      ret.status === 'CANCELLED') {
+    throw new Error(`Return ${ret.returnNumber} already ${ret.status}`);
+  }
+  if (input.acceptedItemIds.length === 0) {
+    throw new Error('Must accept at least one item to approve a return');
+  }
+  const validIds = new Set(ret.items.map((i) => i.id));
+  for (const id of input.acceptedItemIds) {
+    if (!validIds.has(id)) {
+      throw new Error(`ReturnItem ${id} does not belong to ${ret.returnNumber}`);
+    }
+  }
+
+  const refund = await deps.refundForReturn(returnId, input.acceptedItemIds);
+
+  const updated = await prisma.return.update({
+    where: { id: returnId },
+    data: {
+      status: 'APPROVED',
+      approvedAt: new Date(),
+      approvedBy: input.actorId,
+      refundedAt: new Date(),
+      refundAmountCents: refund.amountCents,
+      inspectionNotes: input.inspectionNotes ?? null,
+    },
+  });
+
+  const recipient = ret.order.user?.email ?? null;
+  if (recipient) {
+    const accepted = new Set(input.acceptedItemIds);
+    const itemSummaries = ret.items
+      .filter((i) => accepted.has(i.id))
+      .map((i) => ({
+        name: i.orderItem.productName,
+        qty: i.quantity,
+        priceCents: i.orderItem.unitPriceCents,
+      }));
+    const emailService = deps.emailService ?? getEmailService();
+    await sendTemplatedEmail({
+      service: emailService,
+      to: recipient,
+      subject: `Refund issued for return ${ret.returnNumber}`,
+      component: React.createElement(RefundIssued, {
+        returnNumber: ret.returnNumber,
+        orderNumber: ret.order.orderNumber,
+        customerName: ret.order.shipFirstName,
+        refundAmountCents: refund.amountCents,
+        items: itemSummaries,
+        refundMethod: 'card',
+      }),
+    });
+  }
+
+  return updated;
+}
 
 function buildReturnCarrierInput(
   order: OrderWithBits,
