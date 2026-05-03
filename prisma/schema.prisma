@@ -461,6 +461,7 @@ model Order {
   events      OrderStatusEvent[]
   payment     Payment?
   redemptions PromoRedemption[]
+  shipments   Shipment[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -512,6 +513,39 @@ model Payment {
   rawResponse           Json?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+}
+
+model Shipment {
+  id                String          @id @default(cuid())
+  orderId           String
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier           Carrier
+  trackingNumber    String?
+  labelStorageKey   String?
+  labelGeneratedAt  DateTime?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+  attemptCount      Int             @default(0)
+  lastAttemptError  String?
+  events            ShipmentEvent[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([trackingNumber])
+}
+
+model ShipmentEvent {
+  id          String    @id @default(cuid())
+  shipmentId  String
+  shipment    Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status      String
+  description String?
+  occurredAt  DateTime
+  recordedAt  DateTime  @default(now())
+
+  @@index([shipmentId, occurredAt])
 }
 
 model PromoCode {
