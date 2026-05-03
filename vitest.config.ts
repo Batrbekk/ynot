@@ -13,7 +13,11 @@ const clientProject = {
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["src/server/**", "src/app/api/**/*.test.{ts,tsx}"],
+    exclude: [
+      "src/server/**",
+      "src/app/api/**/*.test.{ts,tsx}",
+      "src/worker/**",
+    ],
     css: false,
   },
 };
@@ -34,6 +38,7 @@ const serverProject = {
     include: [
       "src/server/**/*.{test,spec}.{ts,tsx}",
       "src/app/api/**/*.test.{ts,tsx}",
+      "src/worker/**/*.{test,spec}.{ts,tsx}",
       "scripts/**/*.{test,spec}.ts",
     ],
     pool: "forks",
