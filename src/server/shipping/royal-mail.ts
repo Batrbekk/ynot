@@ -1,7 +1,11 @@
 import { prisma } from '@/server/db/client';
-import type { ShippingRateProvider, ShippingRateRequest, ShippingRateQuote } from './provider';
+import type {
+  MultiQuoteShippingProvider,
+  ShippingRateRequest,
+  ShippingRateQuote,
+} from './provider';
 
-export class RoyalMailFreeProvider implements ShippingRateProvider {
+export class RoyalMailFreeProvider implements MultiQuoteShippingProvider {
   async quote(req: ShippingRateRequest): Promise<ShippingRateQuote[]> {
     if (req.destination.countryCode !== 'GB') return [];
     const method = await prisma.shippingMethod.findFirst({

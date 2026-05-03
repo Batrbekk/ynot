@@ -1,5 +1,9 @@
 import { prisma } from '@/server/db/client';
-import type { ShippingRateProvider, ShippingRateRequest, ShippingRateQuote } from './provider';
+import type {
+  MultiQuoteShippingProvider,
+  ShippingRateRequest,
+  ShippingRateQuote,
+} from './provider';
 
 const EU_27 = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
 const EFTA = ['NO','CH','IS','LI'];
@@ -26,7 +30,7 @@ export function resolveRegion(cc: string): Region {
   return 'ROW';
 }
 
-export class MockDhlProvider implements ShippingRateProvider {
+export class MockDhlProvider implements MultiQuoteShippingProvider {
   async quote(req: ShippingRateRequest): Promise<ShippingRateQuote[]> {
     if (req.destination.countryCode === 'GB') return [];
     const region = resolveRegion(req.destination.countryCode);
