@@ -1,0 +1,190 @@
+import type { CreateShipmentInput } from './provider';
+
+const RM_BASE = 'https://api.parcel.royalmail.com/api/v1';
+
+const WAREHOUSE = {
+  fullName: 'YNOT London Despatch',
+  companyName: 'YNOT London',
+  addressLine1: '13 Elvaston Place',
+  addressLine2: 'Flat 1',
+  city: 'London',
+  postcode: 'SW7 5QG',
+  countryCode: 'GB',
+  email: 'hello@ynotlondon.com',
+  phone: '+44 20 0000 0000',
+} as const;
+
+/** Royal Mail Tracked 48 (outbound). */
+const SERVICE_CODE_TRACKED_48 = 'TPN';
+/** Royal Mail Tracked Returns. */
+const SERVICE_CODE_TRACKED_RETURNS = 'TPS';
+
+export interface RoyalMailClickDropConfig {
+  apiKey: string;
+  fetcher?: typeof fetch;
+}
+
+export interface CreateRmShipmentResult {
+  trackingNumber: string;
+  rmOrderId: string;
+}
+
+export interface CreateReturnLabelResult {
+  rmOrderId: string;
+  labelPdfBytes: Buffer;
+}
+
+interface RmCreatedOrder {
+  orderIdentifier?: number | string;
+  orderReference?: string;
+  trackingNumber?: string;
+}
+
+interface RmCreateOrdersResponse {
+  createdOrders?: RmCreatedOrder[];
+  failedOrders?: unknown[];
+  errorsCount?: number;
+  successCount?: number;
+}
+
+/**
+ * Royal Mail Click & Drop API client.
+ *
+ * Used at fulfilment time to create outbound UK shipments (Tracked 48) and
+ * return labels (Tracked Returns). UK rates remain a static £0 quote at
+ * checkout — see {@link RoyalMailFreeProvider}.
+ *
+ * Tests inject `cfg.fetcher`; production passes nothing and the global
+ * `fetch` is used.
+ */
+export class RoyalMailClickDropProvider {
+  private readonly fetcher: typeof fetch;
+
+  constructor(private readonly cfg: RoyalMailClickDropConfig) {
+    this.fetcher = cfg.fetcher ?? fetch;
+  }
+
+  private headers(json = true): HeadersInit {
+    const h: Record<string, string> = {
+      Authorization: `Bearer ${this.cfg.apiKey}`,
+      Accept: 'application/json',
+    };
+    if (json) h['Content-Type'] = 'application/json';
+    return h;
+  }
+
+  /** POST /orders with the customer as recipient (warehouse is implicit sender). */
+  async createShipment(input: CreateShipmentInput): Promise<CreateRmShipmentResult> {
+    const body = {
+      items: [buildOrderPayload(input, SERVICE_CODE_TRACKED_48, input.recipient)],
+    };
+
+    const resp = await this.fetcher(`${RM_BASE}/orders`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`Royal Mail createShipment ${resp.status}: ${err}`);
+    }
+    const data = (await resp.json()) as RmCreateOrdersResponse;
+    const created = data.createdOrders?.[0];
+    if (!created) {
+      throw new Error('Royal Mail createShipment returned no createdOrders');
+    }
+    if (!created.trackingNumber || created.orderIdentifier === undefined) {
+      throw new Error('Royal Mail createShipment response missing trackingNumber/orderIdentifier');
+    }
+    return {
+      trackingNumber: created.trackingNumber,
+      rmOrderId: String(created.orderIdentifier),
+    };
+  }
+
+  /** GET /orders/:id/label — binary PDF response. */
+  async getLabel(rmOrderId: string): Promise<Buffer> {
+    const resp = await this.fetcher(`${RM_BASE}/orders/${rmOrderId}/label`, {
+      method: 'GET',
+      headers: { ...this.headers(false), Accept: 'application/pdf' },
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`Royal Mail getLabel ${resp.status}: ${err}`);
+    }
+    return Buffer.from(await resp.arrayBuffer());
+  }
+}
+
+interface RecipientLike {
+  fullName: string;
+  companyName?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  postalCode: string;
+  countryCode: string;
+  email?: string;
+  phone?: string;
+}
+
+function partyToRm(party: RecipientLike): Record<string, unknown> {
+  return {
+    address: {
+      fullName: party.fullName,
+      companyName: party.companyName ?? party.fullName,
+      addressLine1: party.addressLine1,
+      ...(party.addressLine2 ? { addressLine2: party.addressLine2 } : {}),
+      city: party.city,
+      postcode: party.postalCode,
+      countryCode: party.countryCode,
+    },
+    ...(party.phone ? { phoneNumber: party.phone } : {}),
+    ...(party.email ? { emailAddress: party.email } : {}),
+  };
+}
+
+function buildOrderPayload(
+  input: CreateShipmentInput,
+  serviceCode: string,
+  recipient: RecipientLike,
+  sender?: RecipientLike,
+): Record<string, unknown> {
+  return {
+    orderReference: input.orderRef,
+    recipient: partyToRm(recipient),
+    ...(sender ? { sender: partyToRm(sender) } : {}),
+    billing: partyToRm(recipient),
+    packages: [
+      {
+        weightInGrams: input.weightGrams,
+        packageFormatIdentifier: 'smallParcel',
+      },
+    ],
+    orderDate: new Date().toISOString(),
+    subtotal: input.subtotalCents / 100,
+    shippingCostCharged: 0,
+    total: input.subtotalCents / 100,
+    currencyCode: 'GBP',
+    postageDetails: { serviceCode },
+    orderLines: input.items.map((i) => ({
+      name: i.name,
+      SKU: i.sku,
+      quantity: i.quantity,
+      unitValue: i.unitPriceCents / 100,
+      unitWeightInGrams: i.weightGrams,
+      ...(i.countryOfOriginCode ? { customsOriginCountry: i.countryOfOriginCode } : {}),
+      ...(i.hsCode ? { customsCode: i.hsCode } : {}),
+    })),
+  };
+}
+
+// Internal helpers re-exported for the return-label path.
+export const __internal = {
+  WAREHOUSE,
+  SERVICE_CODE_TRACKED_48,
+  SERVICE_CODE_TRACKED_RETURNS,
+  RM_BASE,
+  buildOrderPayload,
+  partyToRm,
+};
