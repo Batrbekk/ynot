@@ -9,6 +9,7 @@ import { renderEmail } from "@/server/email/render";
 
 import { OrderReceipt, type OrderReceiptProps } from "./order-receipt";
 import { OrderShipped, type OrderShippedProps } from "./order-shipped";
+import { OrderDelivered, type OrderDeliveredProps } from "./order-delivered";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -20,4 +21,10 @@ registerTemplate("OrderShipped", async (payload) => {
   const p = payload as OrderShippedProps;
   const { html, text } = await renderEmail(createElement(OrderShipped, p));
   return { subject: `Your order ${p.orderNumber} is on the way`, html, text };
+});
+
+registerTemplate("OrderDelivered", async (payload) => {
+  const p = payload as OrderDeliveredProps;
+  const { html, text } = await renderEmail(createElement(OrderDelivered, p));
+  return { subject: `Your order ${p.orderNumber} has arrived`, html, text };
 });
