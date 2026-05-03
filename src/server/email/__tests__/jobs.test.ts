@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/server/db/client";
-import { enqueueEmailJob } from "../jobs";
+import { enqueueEmailJob, processDueEmailJobs } from "../jobs";
 
 describe("enqueueEmailJob", () => {
   beforeEach(async () => {
@@ -55,5 +55,26 @@ describe("enqueueEmailJob", () => {
       dedupKey: "cart:c3",
     });
     expect(await prisma.emailJob.count()).toBe(2);
+  });
+});
+
+describe("processDueEmailJobs", () => {
+  beforeEach(async () => {
+    await prisma.emailJob.deleteMany();
+  });
+
+  // The three behavioural tests below depend on the template registry — they
+  // are wired up in Task 21 alongside `registerTemplate`.
+  it.todo("processes jobs whose dispatchAt is in the past, marks SENT");
+  it.todo("marks FAILED after 3 failed attempts");
+  it.todo("ignores jobs in the future");
+
+  // Smoke test we can ship now — confirms the no-op path doesn't blow up
+  // when there are no due jobs (registry is never consulted).
+  it("returns zero counts when there are no due jobs", async () => {
+    const result = await processDueEmailJobs({
+      send: async () => ({ id: "_" }),
+    });
+    expect(result).toEqual({ processed: 0, failed: 0 });
   });
 });
