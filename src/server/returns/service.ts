@@ -9,6 +9,7 @@ import type { RoyalMailClickDropProvider } from '@/server/shipping/royal-mail-cl
 import { ReturnInstructionsUk } from '@/emails/return-instructions-uk';
 import { ReturnInstructionsInternational } from '@/emails/return-instructions-international';
 import { RefundIssued } from '@/emails/refund-issued';
+import { RefundRejected } from '@/emails/refund-rejected';
 import { isWithinReturnWindow, returnLabelPolicy } from './policy';
 import { nextReturnNumber } from './return-number';
 import { buildAndStoreCustomsDeclaration, RETURN_ADDRESS } from './customs';
@@ -306,6 +307,72 @@ export async function approveReturn(
         refundAmountCents: refund.amountCents,
         items: itemSummaries,
         refundMethod: 'card',
+      }),
+    });
+  }
+
+  return updated;
+}
+
+export interface RejectReturnInput {
+  rejectionReason: string;
+  inspectionNotes: string;
+  actorId: string;
+}
+
+export interface RejectReturnDeps {
+  emailService?: EmailService;
+}
+
+/**
+ * Admin rejects a return: marks Return REJECTED, persists the rejection
+ * reason + inspection notes, sends `RefundRejected` email so the customer
+ * knows why no refund is coming.
+ *
+ * Does NOT touch stock — items rejected on inspection stay with the customer
+ * (or are returned to them via a separate operational flow). The actorId is
+ * recorded on `approvedBy` so the inspector is auditable regardless of
+ * outcome.
+ */
+export async function rejectReturn(
+  returnId: string,
+  input: RejectReturnInput,
+  deps: RejectReturnDeps = {},
+): Promise<Return> {
+  const ret = await prisma.return.findUnique({
+    where: { id: returnId },
+    include: { order: { include: { user: true } } },
+  });
+  if (!ret) throw new Error(`Return ${returnId} not found`);
+  if (ret.status === 'APPROVED' || ret.status === 'REJECTED' ||
+      ret.status === 'CANCELLED') {
+    throw new Error(`Return ${ret.returnNumber} already ${ret.status}`);
+  }
+
+  const updated = await prisma.return.update({
+    where: { id: returnId },
+    data: {
+      status: 'REJECTED',
+      rejectedAt: new Date(),
+      rejectionReason: input.rejectionReason,
+      inspectionNotes: input.inspectionNotes,
+      approvedBy: input.actorId,
+    },
+  });
+
+  const recipient = ret.order.user?.email ?? null;
+  if (recipient) {
+    const emailService = deps.emailService ?? getEmailService();
+    await sendTemplatedEmail({
+      service: emailService,
+      to: recipient,
+      subject: `Update on your return ${ret.returnNumber}`,
+      component: React.createElement(RefundRejected, {
+        returnNumber: ret.returnNumber,
+        orderNumber: ret.order.orderNumber,
+        customerName: ret.order.shipFirstName,
+        rejectionReason: input.rejectionReason,
+        inspectionNotes: input.inspectionNotes,
       }),
     });
   }
