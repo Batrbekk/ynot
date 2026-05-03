@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { NextResponse } from "next/server";
 import { ResendVerifyRequestSchema } from "@/lib/schemas";
 import { assertCsrf } from "@/server/auth/csrf";
@@ -5,6 +6,8 @@ import { issueVerificationToken } from "@/server/auth/codes";
 import { findUserByEmail } from "@/server/repositories/user.repo";
 import { checkRateLimit } from "@/server/auth/rate-limit";
 import { getEmailService } from "@/server/email";
+import { sendTemplatedEmail } from "@/server/email/send";
+import { VerifyEmail } from "@/emails/verify-email";
 
 export const dynamic = "force-dynamic";
 
@@ -39,19 +42,15 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   const code = await issueVerificationToken("verify", parsed.data.email);
-  const text = [
-    "Welcome to YNOT London.",
-    "",
-    `Your verification code is: ${code}`,
-    "",
-    "This code expires in 15 minutes.",
-    "If you did not request it, please ignore this email.",
-  ].join("\n");
-  await getEmailService().send({
+  await sendTemplatedEmail({
+    service: getEmailService(),
     to: parsed.data.email,
-    subject: "Your YNOT verification code",
-    html: `<p>${text.replace(/\n/g, "<br>")}</p>`,
-    text,
+    subject: "Verify your email — YNOT London",
+    component: createElement(VerifyEmail, {
+      customerName: user.name ?? undefined,
+      verificationCode: code,
+      expiresInMinutes: 15,
+    }),
   });
 
   return NextResponse.json({ ok: true });
