@@ -19,6 +19,7 @@ import {
   ReturnInstructionsInternational,
   type ReturnInstructionsInternationalProps,
 } from "./return-instructions-international";
+import { RefundIssued, type RefundIssuedProps } from "./refund-issued";
 
 registerTemplate("OrderReceipt", async (payload) => {
   const p = payload as OrderReceiptProps;
@@ -54,4 +55,10 @@ registerTemplate("ReturnInstructionsInternational", async (payload) => {
   const p = payload as ReturnInstructionsInternationalProps;
   const { html, text } = await renderEmail(createElement(ReturnInstructionsInternational, p));
   return { subject: `Return ${p.returnNumber} — instructions`, html, text };
+});
+
+registerTemplate("RefundIssued", async (payload) => {
+  const p = payload as RefundIssuedProps;
+  const { html, text } = await renderEmail(createElement(RefundIssued, p));
+  return { subject: `Refund issued for ${p.returnNumber}`, html, text };
 });
