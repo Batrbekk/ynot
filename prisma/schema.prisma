@@ -44,9 +44,37 @@ enum OrderStatus {
   PAYMENT_FAILED
   NEW
   PROCESSING
+  PARTIALLY_SHIPPED
   SHIPPED
+  PARTIALLY_DELIVERED
   DELIVERED
   RETURNED
+  CANCELLED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  AWAITING_PARCEL
+  RECEIVED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ReturnReason {
+  DOES_NOT_FIT
+  NOT_AS_DESCRIBED
+  CHANGED_MIND
+  DEFECTIVE
+  ARRIVED_DAMAGED
+  WRONG_ITEM
+  OTHER
+}
+
+enum EmailJobStatus {
+  PENDING
+  SENT
+  FAILED
   CANCELLED
 }
 
@@ -365,21 +393,24 @@ model Cart {
 }
 
 model CartItem {
-  id             String   @id @default(cuid())
-  cartId         String
-  cart           Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  productId      String
-  product        Product  @relation(fields: [productId], references: [id])
-  size           Size
-  colour         String
-  quantity       Int      @default(1)
-  unitPriceCents Int
-  currency       Currency @default(GBP)
-  isPreorder     Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String         @id @default(cuid())
+  cartId          String
+  cart            Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product        @relation(fields: [productId], references: [id])
+  preorderBatchId String?
+  preorderBatch   PreorderBatch? @relation(fields: [preorderBatchId], references: [id], onDelete: SetNull)
+  size            Size
+  colour          String
+  quantity        Int            @default(1)
+  unitPriceCents  Int
+  currency        Currency       @default(GBP)
+  isPreorder      Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@index([cartId])
+  @@index([preorderBatchId])
 }
 
 model CartEvent {
@@ -433,6 +464,9 @@ model Order {
   events      OrderStatusEvent[]
   payment     Payment?
   redemptions PromoRedemption[]
+  shipments   Shipment[]
+  returns     Return[]
+  refundEvents RefundEvent[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -456,9 +490,14 @@ model OrderItem {
   currency        Currency       @default(GBP)
   quantity        Int
   isPreorder      Boolean        @default(false)
+  shipmentId      String?
+  shipment        Shipment?      @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+
+  returnItems     ReturnItem[]
 
   @@index([orderId])
   @@index([productId])
+  @@index([shipmentId])
 }
 
 model OrderStatusEvent {
@@ -484,6 +523,93 @@ model Payment {
   rawResponse           Json?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+}
+
+model Shipment {
+  id                String          @id @default(cuid())
+  orderId           String
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier           Carrier
+  trackingNumber    String?
+  labelStorageKey   String?
+  labelGeneratedAt  DateTime?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+  attemptCount      Int             @default(0)
+  lastAttemptError  String?
+  items             OrderItem[]
+  events            ShipmentEvent[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([trackingNumber])
+}
+
+model ShipmentEvent {
+  id          String    @id @default(cuid())
+  shipmentId  String
+  shipment    Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status      String
+  description String?
+  occurredAt  DateTime
+  recordedAt  DateTime  @default(now())
+
+  @@index([shipmentId, occurredAt])
+}
+
+model Return {
+  id                String         @id @default(cuid())
+  returnNumber      String         @unique
+  orderId           String
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status            ReturnStatus   @default(REQUESTED)
+  reason            String
+  reasonCategory    ReturnReason
+  inspectionNotes   String?
+  rejectionReason   String?
+  returnLabelKey    String?
+  customsPdfKey     String?
+  refundAmountCents Int?
+  approvedAt        DateTime?
+  approvedBy        String?
+  rejectedAt        DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  items             ReturnItem[]
+  refundEvents      RefundEvent[]
+
+  @@index([orderId])
+  @@index([status, createdAt])
+}
+
+model ReturnItem {
+  id          String     @id @default(cuid())
+  returnId    String
+  return      Return     @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItemId String
+  orderItem   OrderItem  @relation(fields: [orderItemId], references: [id])
+  quantity    Int
+
+  @@index([returnId])
+  @@index([orderItemId])
+}
+
+model RefundEvent {
+  id              String     @id @default(cuid())
+  returnId        String?
+  return          Return?    @relation(fields: [returnId], references: [id], onDelete: SetNull)
+  orderId         String
+  order           Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stripeRefundId  String     @unique
+  amountCents     Int
+  reason          String
+  createdAt       DateTime   @default(now())
+
+  @@index([orderId])
 }
 
 model PromoCode {
@@ -563,6 +689,7 @@ model PreorderBatch {
   updatedAt         DateTime            @updatedAt
 
   orderItems OrderItem[]
+  cartItems  CartItem[]
 
   @@index([productId])
   @@index([status])
@@ -601,6 +728,25 @@ model NewsletterSubscriber {
   subscribedAt   DateTime  @default(now())
   unsubscribedAt DateTime?
   metadata       Json?
+}
+
+model EmailJob {
+  id             String          @id @default(cuid())
+  template       String
+  recipientEmail String
+  payload        Json
+  dispatchAt     DateTime
+  status         EmailJobStatus  @default(PENDING)
+  attempts       Int             @default(0)
+  lastError      String?
+  sentAt         DateTime?
+  cancelledAt    DateTime?
+  cancelReason   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([dispatchAt, status])
+  @@index([template, status])
 }
 
 model AuditLog {

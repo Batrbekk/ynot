@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { NextResponse } from "next/server";
 import { ForgotPasswordRequestSchema } from "@/lib/schemas";
 import { assertCsrf } from "@/server/auth/csrf";
@@ -5,6 +6,8 @@ import { issueVerificationToken } from "@/server/auth/codes";
 import { findUserByEmail } from "@/server/repositories/user.repo";
 import { checkRateLimit } from "@/server/auth/rate-limit";
 import { getEmailService } from "@/server/email";
+import { sendTemplatedEmail } from "@/server/email/send";
+import { PasswordReset } from "@/emails/password-reset";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +41,16 @@ export async function POST(req: Request): Promise<NextResponse> {
   const user = await findUserByEmail(parsed.data.email);
   if (user && user.emailVerifiedAt) {
     const code = await issueVerificationToken("reset", parsed.data.email);
-    await getEmailService().sendPasswordResetCode(parsed.data.email, code);
+    await sendTemplatedEmail({
+      service: getEmailService(),
+      to: parsed.data.email,
+      subject: "Reset your YNOT London password",
+      component: createElement(PasswordReset, {
+        customerName: user.name ?? undefined,
+        resetCode: code,
+        expiresInMinutes: 15,
+      }),
+    });
   }
 
   return NextResponse.json({ ok: true });

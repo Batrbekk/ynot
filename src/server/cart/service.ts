@@ -7,6 +7,7 @@ import {
   createUserCart,
   type CartClient,
 } from '@/server/repositories/cart.repo';
+import { assignItemToBatch } from '@/server/preorders/service';
 import type { CartSnapshotT, CartItemSnapshotT, AddItemRequestT } from '@/lib/schemas/cart';
 
 export interface CartIdentity {
@@ -70,6 +71,7 @@ export async function snapshotCart(
       unitPriceCents: it.unitPriceCents,
       currency: 'GBP' as const,
       isPreorder: it.isPreorder,
+      preorderBatchId: it.preorderBatchId,
       stockAvailable: stockRow?.stock ?? 0,
     };
   });
@@ -133,6 +135,17 @@ export async function addItem(
       throw new StockConflictError(input.productId, input.size, stockRow.stock);
     }
 
+    // Auto-assign preorder items to the active PreorderBatch (spec §9.2 / Group M).
+    // `Product.preOrder = true` is the catalog-side flag; the per-line
+    // `input.isPreorder` mirrors it from the PDP.  Either signal triggers the
+    // lookup so an item never lands in cart with `isPreorder = true` but no
+    // batch — the checkout shipment splitter would otherwise drop it.
+    const treatAsPreorder = product.preOrder || input.isPreorder;
+    let preorderBatchId: string | null = null;
+    if (treatAsPreorder) {
+      preorderBatchId = await assignItemToBatch(input.productId, tx);
+    }
+
     if (existingItem) {
       await tx.cartItem.update({ where: { id: existingItem.id }, data: { quantity: totalQty } });
     } else {
@@ -145,7 +158,8 @@ export async function addItem(
           quantity: input.quantity,
           unitPriceCents: product.priceCents,
           currency: 'GBP',
-          isPreorder: input.isPreorder,
+          isPreorder: treatAsPreorder,
+          preorderBatchId,
         },
       });
     }

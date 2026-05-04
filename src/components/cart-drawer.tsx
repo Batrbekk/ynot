@@ -60,7 +60,7 @@ export function CartDrawer() {
                     </p>
                     {item.isPreorder && (
                       <p className="text-[11px] uppercase tracking-[0.15em] text-accent-warm mt-1">
-                        Pre-order · 3-4 weeks
+                        Pre-order — ships in 4-6 weeks
                       </p>
                     )}
                   </div>
@@ -69,7 +69,9 @@ export function CartDrawer() {
                       value={item.quantity}
                       onChange={(q) => setQuantity(item.id, q)}
                       min={1}
-                      max={item.stockAvailable}
+                      // Pre-order items bypass the live stockAvailable cap
+                      // (zero stock is allowed); cap at a generous 20.
+                      max={item.isPreorder ? 20 : item.stockAvailable}
                     />
                     <p className="text-[13px] font-medium">
                       {formatPrice(item.unitPriceCents * item.quantity, 'GBP')}

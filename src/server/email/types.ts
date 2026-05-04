@@ -1,4 +1,17 @@
+export interface SendEmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+}
+
+export interface SendEmailInput {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  attachments?: SendEmailAttachment[];
+}
+
 export interface EmailService {
-  sendVerificationCode(email: string, code: string): Promise<void>;
-  sendPasswordResetCode(email: string, code: string): Promise<void>;
+  send(input: SendEmailInput): Promise<{ id: string }>;
 }

@@ -16,6 +16,12 @@ export type Carrier = z.infer<typeof CarrierSchema>;
 
 export const OrderSchema = z.object({
   id: z.string().min(1),
+  /**
+   * Internal prisma `Order.id` (cuid). Distinct from `id` (orderNumber) so the
+   * returns wizard can post `orderId` to `/api/returns` while existing UI
+   * continues to display the human-friendly number.
+   */
+  recordId: z.string().optional(),
   /** ISO 8601 timestamp */
   createdAt: z.string(),
   status: OrderStatusSchema,

@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { NextResponse } from "next/server";
 import { RegisterRequestSchema } from "@/lib/schemas";
 import { assertCsrf } from "@/server/auth/csrf";
@@ -6,6 +7,8 @@ import { issueVerificationToken } from "@/server/auth/codes";
 import { createUser, findUserByEmail } from "@/server/repositories/user.repo";
 import { checkRateLimit } from "@/server/auth/rate-limit";
 import { getEmailService } from "@/server/email";
+import { sendTemplatedEmail } from "@/server/email/send";
+import { VerifyEmail } from "@/emails/verify-email";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +47,16 @@ export async function POST(req: Request): Promise<NextResponse> {
   });
 
   const code = await issueVerificationToken("verify", parsed.data.email);
-  await getEmailService().sendVerificationCode(parsed.data.email, code);
+  await sendTemplatedEmail({
+    service: getEmailService(),
+    to: parsed.data.email,
+    subject: "Verify your email — YNOT London",
+    component: createElement(VerifyEmail, {
+      customerName: parsed.data.name,
+      verificationCode: code,
+      expiresInMinutes: 15,
+    }),
+  });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

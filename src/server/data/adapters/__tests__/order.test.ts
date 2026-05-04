@@ -48,6 +48,7 @@ const baseRow = {
       currency: "GBP" as const,
       quantity: 1,
       isPreorder: false,
+      shipmentId: null as string | null,
     },
   ],
 };

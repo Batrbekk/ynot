@@ -57,3 +57,56 @@ describe("parseEnv", () => {
     expect(env.SEED_OWNER_EMAIL).toBe("owner@ynot.london");
   });
 });
+
+describe("Phase 5 envs", () => {
+  const baseEnv = {
+    DATABASE_URL: "postgresql://x",
+    REDIS_URL: "redis://x",
+    NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
+    NEXTAUTH_SECRET: "a".repeat(32),
+    ORDER_TOKEN_SECRET: "b".repeat(32),
+    STRIPE_SECRET_KEY: "sk_test_x",
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_x",
+    STRIPE_WEBHOOK_SECRET: "whsec_x",
+    ROYAL_MAIL_API_KEY: "rm-key",
+    DHL_API_KEY: "dhl-key",
+    DHL_API_SECRET: "dhl-secret",
+    DHL_ACCOUNT_NUMBER: "230200799",
+    RESEND_API_KEY: "re_x",
+    RESEND_FROM: "YNOT <hello@ynotlondon.com>",
+    ALERT_EMAIL: "alerts@ynotlondon.com",
+    SHIPPING_PROVIDER: "mock",
+  };
+
+  it("parses ROYAL_MAIL_API_KEY, RESEND_*, LABEL_STORAGE, ALERT_EMAIL with defaults", () => {
+    const env = parseEnv(baseEnv);
+    expect(env.ROYAL_MAIL_API_KEY).toBe("rm-key");
+    expect(env.LABEL_STORAGE).toBe("local");
+    expect(env.LABEL_STORAGE_PATH).toBe("/var/lib/ynot/labels");
+    expect(env.WORKER_ENABLED).toBe(true);
+    expect(env.ALERT_EMAIL).toBe("alerts@ynotlondon.com");
+    expect(env.RESEND_API_KEY).toBe("re_x");
+    expect(env.RESEND_FROM).toBe("YNOT <hello@ynotlondon.com>");
+    expect(env.DHL_API_KEY).toBe("dhl-key");
+    expect(env.DHL_API_SECRET).toBe("dhl-secret");
+    expect(env.DHL_ACCOUNT_NUMBER).toBe("230200799");
+  });
+
+  it("rejects invalid LABEL_STORAGE value", () => {
+    expect(() => parseEnv({ ...baseEnv, LABEL_STORAGE: "azure" })).toThrow();
+  });
+
+  it("coerces WORKER_ENABLED='false' to boolean false", () => {
+    const env = parseEnv({ ...baseEnv, WORKER_ENABLED: "false" });
+    expect(env.WORKER_ENABLED).toBe(false);
+  });
+
+  it("coerces WORKER_ENABLED='true' (or anything else) to boolean true", () => {
+    const env = parseEnv({ ...baseEnv, WORKER_ENABLED: "true" });
+    expect(env.WORKER_ENABLED).toBe(true);
+  });
+
+  it("requires ALERT_EMAIL to be a valid email", () => {
+    expect(() => parseEnv({ ...baseEnv, ALERT_EMAIL: "not-an-email" })).toThrow();
+  });
+});

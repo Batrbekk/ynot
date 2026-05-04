@@ -9,8 +9,7 @@ import { resetDb } from "@/server/__tests__/helpers/reset-db";
 vi.mock("@/server/auth/csrf", () => ({ assertCsrf: vi.fn() }));
 vi.mock("@/server/email", () => ({
   getEmailService: () => ({
-    sendVerificationCode: vi.fn().mockResolvedValue(undefined),
-    sendPasswordResetCode: vi.fn().mockResolvedValue(undefined),
+    send: vi.fn().mockResolvedValue({ id: "msg_test" }),
   }),
 }));
 
