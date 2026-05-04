@@ -31,7 +31,7 @@ import type {
 } from '@/server/tracking/provider';
 import type { EmailService, SendEmailInput } from '@/server/email/types';
 import type { LabelStorage } from '@/server/fulfilment/label-storage';
-import { seedShipping } from '../../../../../tests/seeds/shipping';
+import { seedShipping } from '../../../../tests/seeds/shipping';
 
 // ---- Shared in-test infrastructure ----
 
@@ -533,12 +533,12 @@ describe('E2E — order lifecycle (mixed cart with preorder)', () => {
         },
       },
     });
-    after = await prisma.order.findUniqueOrThrow({
+    const final = await prisma.order.findUniqueOrThrow({
       where: { id: order.id },
       include: { shipments: true },
     });
-    expect(after.status).toBe('DELIVERED');
-    expect(after.shipments.every((s) => s.deliveredAt !== null)).toBe(true);
+    expect(final.status).toBe('DELIVERED');
+    expect(final.shipments.every((s) => s.deliveredAt !== null)).toBe(true);
   }, 30_000);
 });
 
@@ -628,7 +628,9 @@ describe('E2E — carrier failure with retry + alert', () => {
   it('eventually succeeds after 4 failures → label generated on 5th attempt', async () => {
     const { shipmentId } = await seedShipmentReady();
     const dhl = makeFailingDhl(4);
-    const sendLabelFailureAlert = vi.fn(async () => undefined);
+    const sendLabelFailureAlert = vi.fn<(s: Shipment) => Promise<void>>(
+      async () => undefined,
+    );
     const deps: TryCreateShipmentDeps = {
       dhl,
       rm: {
@@ -664,7 +666,9 @@ describe('E2E — carrier failure with retry + alert', () => {
   it('5 failures in a row → gaveUp + sendLabelFailureAlert fired', async () => {
     const { shipmentId } = await seedShipmentReady();
     const dhl = makeFailingDhl(99); // always fails
-    const sendLabelFailureAlert = vi.fn(async () => undefined);
+    const sendLabelFailureAlert = vi.fn<(s: Shipment) => Promise<void>>(
+      async () => undefined,
+    );
     const deps: TryCreateShipmentDeps = {
       dhl,
       rm: {
