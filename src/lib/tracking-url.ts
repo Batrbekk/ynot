@@ -1,4 +1,5 @@
-import type { Carrier } from "@prisma/client";
+/** Mirrors prisma's Carrier enum without importing it (lib is browser-safe). */
+export type CarrierId = "ROYAL_MAIL" | "DHL";
 
 /**
  * Build a customer-facing carrier tracking URL.
@@ -11,7 +12,7 @@ import type { Carrier } from "@prisma/client";
  * Returns null when the tracking number is missing or empty.
  */
 export function getTrackingUrl(
-  carrier: Carrier,
+  carrier: CarrierId,
   trackingNumber: string | null | undefined,
 ): string | null {
   if (!trackingNumber) return null;

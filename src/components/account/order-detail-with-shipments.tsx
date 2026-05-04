@@ -1,19 +1,51 @@
 import * as React from "react";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
-import { getTrackingUrl } from "@/lib/tracking-url";
+import { getTrackingUrl, type CarrierId } from "@/lib/tracking-url";
 import { Display } from "@/components/ui/typography";
-import type {
-  Order as PrismaOrder,
-  OrderItem,
-  OrderStatusEvent,
-  Shipment,
-} from "@prisma/client";
 
-export type OrderForCustomer = PrismaOrder & {
-  items: OrderItem[];
-  shipments: Shipment[];
-  events: OrderStatusEvent[];
+/**
+ * Browser-safe shape mirrors the prisma row + relations the page loader
+ * returns (`src/server/data/customer-orders.ts`). Kept local so this file
+ * stays out of `@prisma/client` (forbidden in `src/components/**`).
+ */
+export type OrderForCustomer = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalCents: number;
+  carrier: CarrierId;
+  createdAt: Date;
+  shipFirstName: string;
+  shipLastName: string;
+  shipLine1: string;
+  shipLine2: string | null;
+  shipCity: string;
+  shipPostcode: string;
+  shipCountry: string;
+  items: Array<{
+    id: string;
+    productImage: string;
+    productName: string;
+    colour: string;
+    size: string;
+    quantity: number;
+    unitPriceCents: number;
+    isPreorder: boolean;
+  }>;
+  shipments: Array<{
+    id: string;
+    carrier: CarrierId;
+    trackingNumber: string | null;
+    shippedAt: Date | null;
+    deliveredAt: Date | null;
+  }>;
+  events: Array<{
+    id: string;
+    status: string;
+    note: string | null;
+    createdAt: Date;
+  }>;
 };
 
 const eventDateFormat = (d: Date) =>
@@ -25,10 +57,10 @@ const eventDateFormat = (d: Date) =>
     minute: "2-digit",
   });
 
-const carrierLabel = (c: PrismaOrder["carrier"]) =>
+const carrierLabel = (c: CarrierId) =>
   c === "ROYAL_MAIL" ? "Royal Mail" : "DHL Express";
 
-const statusLabel = (s: PrismaOrder["status"]) =>
+const statusLabel = (s: string) =>
   s.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 export function OrderDetailWithShipments({ order }: { order: OrderForCustomer }) {
