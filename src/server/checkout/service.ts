@@ -146,6 +146,11 @@ export async function createOrderAndPaymentIntent(
             currency: 'GBP',
             quantity: i.quantity,
             isPreorder: i.isPreorder,
+            // Carry the cart-side batch assignment forward so
+            // `splitOrderIntoShipments` can group preorders by batch.
+            ...(i.preorderBatchId
+              ? { preorderBatch: { connect: { id: i.preorderBatchId } } }
+              : {}),
           })),
         },
         payment: {

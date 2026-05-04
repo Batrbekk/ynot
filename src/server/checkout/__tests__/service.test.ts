@@ -160,4 +160,67 @@ describe('createOrderAndPaymentIntent', () => {
     const o2 = await prisma.order.findUniqueOrThrow({ where: { id: r2.orderId } });
     expect(o1.userId).toBe(o2.userId);
   });
+
+  it('splits mixed in-stock + preorder carts into 2 Shipments with batch link on the preorder OrderItem', async () => {
+    mockStripeSdk();
+    const { createOrderAndPaymentIntent } = await import('../service');
+
+    const inStock = await prisma.product.create({
+      data: {
+        slug: 'p-stock-' + Math.random().toString(36).slice(2, 6),
+        name: 'P', priceCents: 10000, currency: 'GBP',
+        description: '', materials: '', care: '', sizing: '',
+        weightGrams: 1500,
+        sizes: { create: [{ size: 'S', stock: 5 }] },
+        images: { create: [{ url: '/x.jpg', alt: '', sortOrder: 0 }] },
+      },
+    });
+    const preorderProduct = await prisma.product.create({
+      data: {
+        slug: 'p-preorder-' + Math.random().toString(36).slice(2, 6),
+        name: 'P', priceCents: 30000, currency: 'GBP',
+        description: '', materials: '', care: '', sizing: '',
+        weightGrams: 1500, preOrder: true,
+        sizes: { create: [{ size: 'M', stock: 5 }] },
+        images: { create: [{ url: '/x.jpg', alt: '', sortOrder: 0 }] },
+      },
+    });
+    const batch = await prisma.preorderBatch.create({
+      data: {
+        name: 'AW26 batch',
+        productId: preorderProduct.id,
+        estimatedShipFrom: new Date('2026-08-01'),
+        estimatedShipTo: new Date('2026-08-15'),
+        status: 'PENDING',
+      },
+    });
+
+    const cart = await getOrCreateCart({ userId: null, sessionToken: generateCartToken() });
+    await addItem(cart.id, { productId: inStock.id, size: 'S', colour: 'Black', quantity: 1, isPreorder: false });
+    await addItem(cart.id, { productId: preorderProduct.id, size: 'M', colour: 'Black', quantity: 1, isPreorder: true });
+
+    const result = await createOrderAndPaymentIntent({
+      cartId: cart.id,
+      user: null,
+      address: {
+        email: 'g@x.com', firstName: 'G', lastName: 'X',
+        line1: '1 St', city: 'London', postcode: 'SW1', countryCode: 'GB', phone: '+440000000000',
+      },
+      methodId: 'method-uk-rm-tracked48',
+      attribution: null,
+    });
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: result.orderId },
+      include: { items: true, shipments: true },
+    });
+    expect(order.shipments).toHaveLength(2);
+    const inStockItem = order.items.find((i) => i.productId === inStock.id)!;
+    const preorderItem = order.items.find((i) => i.productId === preorderProduct.id)!;
+    expect(inStockItem.preorderBatchId).toBeNull();
+    expect(inStockItem.isPreorder).toBe(false);
+    expect(preorderItem.preorderBatchId).toBe(batch.id);
+    expect(preorderItem.isPreorder).toBe(true);
+    expect(inStockItem.shipmentId).not.toBe(preorderItem.shipmentId);
+  });
 });

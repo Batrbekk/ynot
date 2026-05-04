@@ -63,6 +63,7 @@ export const CartItemSnapshot = z.object({
   unitPriceCents: z.number(),
   currency: z.literal('GBP'),
   isPreorder: z.boolean(),
+  preorderBatchId: z.string().nullable(),
   stockAvailable: z.number(),
 });
 

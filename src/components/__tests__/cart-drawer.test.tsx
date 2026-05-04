@@ -19,6 +19,7 @@ const sampleSnapshot = {
       unitPriceCents: 89500,
       currency: 'GBP' as const,
       isPreorder: false,
+      preorderBatchId: null,
       stockAvailable: 5,
     },
   ],
@@ -70,6 +71,7 @@ describe('CartDrawer', () => {
         {
           ...sampleSnapshot.items[0],
           isPreorder: true,
+          preorderBatchId: null,
           // backing stock is zero — preorder should still allow this item
           stockAvailable: 0,
         },

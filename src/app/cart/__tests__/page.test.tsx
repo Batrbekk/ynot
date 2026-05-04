@@ -19,6 +19,7 @@ const baseSnapshot = {
       unitPriceCents: 89500,
       currency: "GBP" as const,
       isPreorder: false,
+      preorderBatchId: null,
       stockAvailable: 5,
     },
   ],
@@ -50,6 +51,7 @@ describe("CartPage pre-order eyebrow", () => {
           {
             ...baseSnapshot.items[0],
             isPreorder: true,
+            preorderBatchId: null,
             stockAvailable: 0,
           },
         ],

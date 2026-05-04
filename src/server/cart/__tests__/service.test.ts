@@ -113,6 +113,55 @@ describe('cart service — addItem', () => {
       addItem(cart.id, { productId: product.id, size: 'S', colour: 'Black', quantity: 5, isPreorder: false }),
     ).rejects.toThrow(/stock/i);
   });
+
+  it('auto-assigns preorder items to the active PreorderBatch', async () => {
+    const product = await prisma.product.create({
+      data: {
+        slug: 'p-pre-' + Math.random().toString(36).slice(2, 6),
+        name: 'P', priceCents: 30000, currency: 'GBP',
+        description: '', materials: '', care: '', sizing: '',
+        preOrder: true,
+        sizes: { create: [{ size: 'S', stock: 5 }] },
+        images: { create: [{ url: '/x.jpg', alt: '', sortOrder: 0 }] },
+      },
+    });
+    // Two batches — earliest estimatedShipFrom should win.
+    await prisma.preorderBatch.create({
+      data: {
+        name: 'Later batch',
+        productId: product.id,
+        estimatedShipFrom: new Date('2026-09-01'),
+        estimatedShipTo: new Date('2026-09-15'),
+        status: 'PENDING',
+      },
+    });
+    const earlyBatch = await prisma.preorderBatch.create({
+      data: {
+        name: 'Earlier batch',
+        productId: product.id,
+        estimatedShipFrom: new Date('2026-07-01'),
+        estimatedShipTo: new Date('2026-07-15'),
+        status: 'IN_PRODUCTION',
+      },
+    });
+    const cart = await getOrCreateCart({ userId: null, sessionToken: generateCartToken() });
+    await addItem(cart.id, {
+      productId: product.id, size: 'S', colour: 'Black', quantity: 1, isPreorder: true,
+    });
+    const row = await prisma.cartItem.findFirstOrThrow({ where: { cartId: cart.id } });
+    expect(row.isPreorder).toBe(true);
+    expect(row.preorderBatchId).toBe(earlyBatch.id);
+  });
+
+  it('does not assign a batch for non-preorder products', async () => {
+    const product = await makeProduct(5);
+    const cart = await getOrCreateCart({ userId: null, sessionToken: generateCartToken() });
+    await addItem(cart.id, {
+      productId: product.id, size: 'S', colour: 'Black', quantity: 1, isPreorder: false,
+    });
+    const row = await prisma.cartItem.findFirstOrThrow({ where: { cartId: cart.id } });
+    expect(row.preorderBatchId).toBeNull();
+  });
 });
 
 describe('cart service — setQuantity / removeItem', () => {

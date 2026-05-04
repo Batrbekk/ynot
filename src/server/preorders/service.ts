@@ -1,8 +1,16 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/server/db/client';
 import type {
   TryCreateShipmentDeps,
   TryCreateShipmentResult,
 } from '@/server/fulfilment/service';
+
+/**
+ * Subset of Prisma client needed by {@link assignItemToBatch} — accepts both
+ * the top-level `prisma` and a tx client so callers (cart `addItem`, checkout)
+ * can run the lookup inside their own transaction.
+ */
+type AssignBatchClient = Pick<Prisma.TransactionClient, 'preorderBatch'> | typeof prisma;
 
 /**
  * Find the active {@link PreorderBatch} a preorder line should join.
@@ -21,8 +29,9 @@ import type {
  */
 export async function assignItemToBatch(
   productId: string,
+  client: AssignBatchClient = prisma,
 ): Promise<string | null> {
-  const batch = await prisma.preorderBatch.findFirst({
+  const batch = await client.preorderBatch.findFirst({
     where: {
       productId,
       status: { in: ['PENDING', 'IN_PRODUCTION'] },
