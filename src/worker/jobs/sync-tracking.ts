@@ -1,10 +1,15 @@
+import * as React from 'react';
 import type Redis from 'ioredis';
 import type { OrderStatus } from '@prisma/client';
 import { prisma } from '@/server/db/client';
+import { env } from '@/server/env';
 import { redis as defaultRedis } from '@/server/redis';
 import { syncShipment, type TrackingProviders } from '@/server/tracking/service';
 import { updateStatus } from '@/server/orders/service';
 import { sendTrackingStaleAlert as defaultSendTrackingStaleAlert } from '@/server/alerts/service';
+import { getEmailService, type EmailService } from '@/server/email';
+import { sendTemplatedEmail } from '@/server/email/send';
+import { OrderDelivered } from '@/emails/order-delivered';
 
 /** Redis key for the consecutive-total-failure counter (spec §12). */
 export const TRACKING_FAILURE_COUNTER_KEY = 'tracking_sync_failures';
@@ -32,6 +37,8 @@ export interface SyncTrackingDeps {
     affectedCount: number,
     oldestStaleSinceHours: number,
   ) => Promise<void>;
+  /** Override the email transport for OrderDelivered (defaults to `getEmailService()`). */
+  emailService?: EmailService;
 }
 
 export interface SyncTrackingResult {
@@ -106,9 +113,65 @@ export async function syncTracking(
     await redisClient.del(TRACKING_FAILURE_COUNTER_KEY);
   }
 
+  // Snapshot the IDs of shipments that were undelivered when this tick
+  // started — `syncShipment` may have set `deliveredAt` on a subset, and we
+  // want to fire `OrderDelivered` exactly once per such transition.
+  const candidateShipmentIds = shipments.map((s) => s.id);
   await reconcileOrderStatuses();
+  await sendOrderDeliveredEmails(
+    candidateShipmentIds,
+    deps.emailService ?? getEmailService(),
+  );
 
   return { synced, failed };
+}
+
+/**
+ * Send `OrderDelivered` once per shipment that flipped from undelivered →
+ * delivered during this sync tick. Idempotent because we only consider the
+ * shipment IDs that started the tick still undelivered — a re-run after the
+ * carrier reports the same state finds no candidates.
+ *
+ * Failures are best-effort: a single template render or transport error is
+ * logged but never aborts the cron loop.
+ */
+async function sendOrderDeliveredEmails(
+  candidateShipmentIds: string[],
+  emailService: EmailService,
+): Promise<void> {
+  if (candidateShipmentIds.length === 0) return;
+
+  const newlyDelivered = await prisma.shipment.findMany({
+    where: {
+      id: { in: candidateShipmentIds },
+      deliveredAt: { not: null },
+      cancelledAt: null,
+    },
+    include: { order: { include: { user: true } } },
+  });
+
+  for (const ship of newlyDelivered) {
+    const recipient = ship.order.user?.email ?? null;
+    if (!recipient) continue;
+    try {
+      await sendTemplatedEmail({
+        service: emailService,
+        to: recipient,
+        subject: `Your order ${ship.order.orderNumber} has arrived`,
+        component: React.createElement(OrderDelivered, {
+          orderNumber: ship.order.orderNumber,
+          customerName: ship.order.shipFirstName,
+          reviewUrl: `${env.NEXT_PUBLIC_SITE_URL}/account/orders/${ship.order.id}`,
+        }),
+      });
+    } catch (err) {
+      process.stderr.write(
+        `[worker] OrderDelivered email failed for shipment ${ship.id}: ${
+          err instanceof Error ? err.message : String(err)
+        }\n`,
+      );
+    }
+  }
 }
 
 /** Drives Order status forward off the per-shipment delivery state. */

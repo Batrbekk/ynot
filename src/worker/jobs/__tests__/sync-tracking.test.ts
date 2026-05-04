@@ -229,6 +229,65 @@ describe('syncTracking', () => {
     expect(refreshed.status).toBe('PARTIALLY_DELIVERED');
   });
 
+  it('sends OrderDelivered email once when a shipment newly transitions to delivered', async () => {
+    const user = await prisma.user.create({
+      data: { email: 'cust@x.com', name: 'Cust', isGuest: true, passwordHash: 'h' },
+    });
+    const order = await prisma.order.create({
+      data: {
+        orderNumber: 'YN-2026-DELIVER',
+        userId: user.id,
+        status: 'SHIPPED',
+        subtotalCents: 1000, shippingCents: 0, totalCents: 1000,
+        carrier: 'DHL',
+        shipFirstName: 'Anna', shipLastName: 'B',
+        shipLine1: '1 St', shipCity: 'London', shipPostcode: 'SW1', shipCountry: 'GB', shipPhone: '+44',
+      },
+    });
+    await prisma.shipment.create({
+      data: {
+        orderId: order.id, carrier: 'DHL', trackingNumber: 'TRK-DELIV-1',
+      },
+    });
+
+    const captured: Array<{ to: string; subject: string }> = [];
+    const emailService = {
+      send: async (input: { to: string; subject: string; html: string; text: string }) => {
+        captured.push({ to: input.to, subject: input.subject });
+        return { id: 'fake' };
+      },
+    };
+
+    const dhl = provider({
+      currentStatus: 'DELIVERED',
+      events: [],
+      deliveredAt: new Date('2026-04-30T12:00:00Z'),
+    });
+    await syncTracking({
+      providers: { dhl, royalMail: provider({ currentStatus: 'IN_TRANSIT', events: [], deliveredAt: null }) },
+      redis: fakeRedis().redis,
+      sendTrackingStaleAlert: vi.fn(),
+      emailService,
+    });
+
+    expect(captured).toHaveLength(1);
+    expect(captured[0].to).toBe('cust@x.com');
+    expect(captured[0].subject).toContain('YN-2026-DELIVER');
+
+    const refreshedOrder = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
+    expect(refreshedOrder.status).toBe('DELIVERED');
+
+    // Idempotent: running again finds no undelivered shipments to track and
+    // therefore no candidates → no second email.
+    await syncTracking({
+      providers: { dhl, royalMail: provider({ currentStatus: 'IN_TRANSIT', events: [], deliveredAt: null }) },
+      redis: fakeRedis().redis,
+      sendTrackingStaleAlert: vi.fn(),
+      emailService,
+    });
+    expect(captured).toHaveLength(1);
+  });
+
   it('ignores cancelled shipments when reconciling order state', async () => {
     const { order, shipment } = await seedOrderWithShipment({ status: 'SHIPPED', carrier: 'DHL' });
     await prisma.shipment.update({
