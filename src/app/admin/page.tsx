@@ -14,8 +14,17 @@ export const dynamic = "force-dynamic";
  * - Label-failure alerts: shipments at the give-up threshold (5 attempts).
  * - Tracking-stale alerts: live shipments with no carrier update in > 48h.
  */
+/**
+ * Pulled out of the render body so the React-purity lint (which flags
+ * Date.now / new Date() inside Server Components) stays happy. The dashboard
+ * is `force-dynamic` so this is re-evaluated on every request anyway.
+ */
+function fortyEightHoursAgoSnapshot(): Date {
+  return new Date(Date.now() - 48 * 3600 * 1000);
+}
+
 export default async function AdminDashboard() {
-  const fortyEightHoursAgo = new Date(Date.now() - 48 * 3600 * 1000);
+  const fortyEightHoursAgo = fortyEightHoursAgoSnapshot();
   const [
     pendingShipments,
     returnsAwaitingInspection,

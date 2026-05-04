@@ -37,7 +37,9 @@ export default async function AdminOrdersPage({ searchParams }: SP) {
       ? (sp.status as OrderStatus)
       : undefined,
     carrier:
-      sp.carrier === "ROYAL_MAIL" || sp.carrier === "DHL" ? sp.carrier : undefined,
+      sp.carrier === "ROYAL_MAIL" || sp.carrier === "DHL"
+        ? (sp.carrier as "ROYAL_MAIL" | "DHL")
+        : undefined,
     country: sp.country?.trim() || undefined,
     search: sp.search?.trim() || undefined,
     cursor: sp.cursor || undefined,
