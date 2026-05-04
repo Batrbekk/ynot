@@ -62,4 +62,26 @@ describe('CartDrawer', () => {
     render(<CartDrawer />);
     expect(screen.queryByText(/your bag/i)).toBeNull();
   });
+
+  it('renders the pre-order eyebrow with spec wording when isPreorder is true', () => {
+    const preorderSnapshot = {
+      ...sampleSnapshot,
+      items: [
+        {
+          ...sampleSnapshot.items[0],
+          isPreorder: true,
+          // backing stock is zero — preorder should still allow this item
+          stockAvailable: 0,
+        },
+      ],
+    };
+    useCartStore.setState({ snapshot: preorderSnapshot });
+    render(<CartDrawer />);
+    expect(
+      screen.getByText(/Pre-order — ships in 4-6 weeks/i),
+    ).toBeInTheDocument();
+    // No out-of-stock warning even though stockAvailable is 0
+    expect(screen.queryByText(/out of stock/i)).toBeNull();
+    expect(screen.queryByText(/sold out/i)).toBeNull();
+  });
 });
