@@ -17,12 +17,14 @@ function toOrderItem(row: PrismaOrderItem): ZodCartItem {
     unitPrice: row.unitPriceCents,
     quantity: row.quantity,
     preOrder: row.isPreorder,
+    orderItemId: row.id,
   };
 }
 
 export function toOrder(row: OrderWithItems): ZodOrder {
   return {
     id: row.orderNumber,
+    recordId: row.id,
     createdAt: row.createdAt.toISOString(),
     status: row.status.toLowerCase() as ZodOrder["status"],
     items: row.items.map(toOrderItem),

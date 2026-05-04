@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ReturnFlowProgress } from "@/components/returns/return-flow-progress";
 import { FindOrderForm } from "@/components/returns/find-order-form";
 import { ReturnItemsSelector } from "@/components/returns/return-items-selector";
-import { ReturnConfirmation } from "@/components/returns/return-confirmation";
+import { ReturnSubmit } from "@/components/returns/return-submit";
 import { useReturnsStubStore } from "@/lib/stores/returns-stub-store";
 import { getOrderById } from "@/server/data/orders";
 import type { Order } from "@/lib/schemas";
@@ -32,7 +32,6 @@ function InitiateReturnInner() {
 
   const [fetchedOrder, setFetchedOrder] = React.useState<Order | null>(null);
   const [findError, setFindError] = React.useState<string | undefined>();
-  const [contactEmail, setContactEmail] = React.useState("");
 
   React.useEffect(() => {
     if (!orderId) return;
@@ -48,14 +47,13 @@ function InitiateReturnInner() {
   // Derived: only treat fetchedOrder as current when its id matches the store
   const order = fetchedOrder && fetchedOrder.id === orderId ? fetchedOrder : null;
 
-  const handleFind = async (orderNumber: string, contact: string) => {
+  const handleFind = async (orderNumber: string, _contact: string) => {
     const found = await getOrderById(orderNumber);
     if (!found) {
       setFindError("We couldn't find an order with those details.");
       return;
     }
     setOrder(found.id);
-    setContactEmail(contact);
     setFindError(undefined);
     router.push("/initiate-return?step=2");
   };
@@ -100,7 +98,17 @@ function InitiateReturnInner() {
             )}
 
             {step === 3 && order && (
-              <ReturnConfirmation orderId={order.id} email={contactEmail} itemCount={selectedItems.length} />
+              <ReturnSubmit
+                orderId={order.recordId ?? order.id}
+                orderNumber={order.id}
+                items={order.items
+                  .filter((it) => selectedItems.includes(`${it.productId}-${it.size}`))
+                  .filter((it): it is typeof it & { orderItemId: string } =>
+                    Boolean(it.orderItemId),
+                  )
+                  .map((it) => ({ orderItemId: it.orderItemId, quantity: it.quantity }))}
+                reason={reason || "(no reason given)"}
+              />
             )}
           </div>
         </Container>

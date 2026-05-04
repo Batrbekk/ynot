@@ -11,6 +11,12 @@ export const CartItemSchema = z.object({
   unitPrice: z.number().int().nonnegative(),
   quantity: z.number().int().positive(),
   preOrder: z.boolean(),
+  /**
+   * When this item came from a server Order (vs a transient cart preview),
+   * the prisma OrderItem.id — needed by the returns wizard so it can post
+   * `{ orderItemId, quantity }` payloads to POST /api/returns.
+   */
+  orderItemId: z.string().optional(),
 });
 
 export type CartItem = z.infer<typeof CartItemSchema>;
