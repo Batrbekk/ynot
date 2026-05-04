@@ -393,21 +393,24 @@ model Cart {
 }
 
 model CartItem {
-  id             String   @id @default(cuid())
-  cartId         String
-  cart           Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  productId      String
-  product        Product  @relation(fields: [productId], references: [id])
-  size           Size
-  colour         String
-  quantity       Int      @default(1)
-  unitPriceCents Int
-  currency       Currency @default(GBP)
-  isPreorder     Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String         @id @default(cuid())
+  cartId          String
+  cart            Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product        @relation(fields: [productId], references: [id])
+  preorderBatchId String?
+  preorderBatch   PreorderBatch? @relation(fields: [preorderBatchId], references: [id], onDelete: SetNull)
+  size            Size
+  colour          String
+  quantity        Int            @default(1)
+  unitPriceCents  Int
+  currency        Currency       @default(GBP)
+  isPreorder      Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@index([cartId])
+  @@index([preorderBatchId])
 }
 
 model CartEvent {
@@ -686,6 +689,7 @@ model PreorderBatch {
   updatedAt         DateTime            @updatedAt
 
   orderItems OrderItem[]
+  cartItems  CartItem[]
 
   @@index([productId])
   @@index([status])
