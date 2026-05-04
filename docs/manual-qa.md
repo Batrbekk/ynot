@@ -262,9 +262,84 @@ Run before each production deploy. Tick boxes inline as you go; commit ticks bac
 
 ---
 
-# Phase 5 — Orders & Fulfilment (🧊 not started)
+# Phase 5 — Orders, Fulfilment, Email, Refunds, Pre-orders, Mini Admin (⏸️ pending live verification)
 
-**Will need verified once shipped:**
+**Status:** ⏸️ — code merged on `feature/backend-phase-5-fulfilment-email-refunds-preorders`; awaiting end-to-end manual run with real Stripe test cards + DHL/Royal Mail sandbox credentials.
+
+**Requirements running:** `pnpm dev` + Docker (Postgres+Redis) + `stripe listen --forward-to localhost:3000/api/webhooks/stripe` + (optional) `WORKER_ENABLED=true pnpm worker:dev` for cron jobs.
+
+## End-to-end fulfilment
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| Stripe test card → Shipment + label PDF | Pay with `4242 ...` on UK address | Webhook fires; Shipment row gets `trackingNumber` + `labelStorageKey`; label PDF visible at `/admin/orders/[id]/ship` | ⏸️ |
+| Mark as despatched → OrderShipped email | Click "Mark as despatched" in admin | OrderShipped email arrives in Console (or real inbox if Resend wired); Order flips to SHIPPED | ⏸️ |
+| Tracking sync delivers order | Run `pnpm worker:dev` then wait one tick (or trigger `syncTracking` manually) | Order flips to DELIVERED once mock provider returns `DELIVERED` | ⏸️ |
+
+## Returns flow
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| Initiate return — UK order | Open `/account/orders/[id]/initiate-return` for a UK SHIPPED order | RoyalMailReturnLabel email arrives with PDF attachment | ⏸️ |
+| Initiate return — international order | Same on a DE/US order | Customer receives ReturnInstructions email + customs PDF + commercial invoice attachments | ⏸️ |
+| Approve return → refund | In `/admin/returns/[id]`, click Approve | Stripe partial refund fires; RefundIssued email sent; Order Payment.refundedAmountCents updated | ⏸️ |
+| Reject return → email | Click Reject with reason | RefundRejected email sent with the reason string | ⏸️ |
+
+## Mixed cart / pre-orders
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| Mixed cart receipt | Cart with one in-stock + one preorder item, complete checkout | Receipt email shows two sections (in-stock items + preorder items with ETA) | ⏸️ |
+| Two Shipment rows | Same order in admin | Order detail shows 2 Shipments; in-stock has tracking, preorder has `labelGeneratedAt = null` | ⏸️ |
+| `release-preorder-batch` CLI | `pnpm tsx scripts/release-preorder-batch.ts <batchId>` | Second Shipment label generated; PreorderBatch.status flips to SHIPPING | ⏸️ |
+
+## Admin actions
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| Cancel order | Admin clicks "Cancel" on a NEW/PROCESSING order | Stock restocked; Stripe full refund fired; OrderCancelled email sent; status CANCELLED | ⏸️ |
+| Manual tracking number | Admin enters tracking# for shipment without a label | Shipment row updated; OrderShipped email enqueued via `enqueueOrderShippedEmail` | ⏸️ |
+| Resend tracking email | Click "Resend tracking" | OrderShipped email arrives even if dedup key was already SENT | ⏸️ |
+| Partial refund | Admin selects line items to refund | Stripe refund call succeeds; RefundIssued email reflects partial amount | ⏸️ |
+| Retry label | Admin clicks "Retry" on a failed shipment | tryCreateShipment runs immediately; success → label generated; failure → attemptCount++ | ⏸️ |
+| Manual label upload | Admin uploads a PDF for stuck shipment | LabelStorage.put accepts the PDF; shipment marked labelGeneratedAt + manual flag | ⏸️ |
+| Auth gate | Visit `/admin/*` unsigned-in or as a non-admin | 401 (or sign-in redirect for HTML) | ⏸️ |
+
+## Carrier failure resilience
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| DHL API down at quote | Block DHL outbound (or set bogus credentials) | Checkout falls back to MockDhlProvider; UI shows "Estimated shipping" + DDU disclosure | ⏸️ |
+| DHL API down at label | Same on `payment_intent.succeeded` | tryCreateShipment swallows error; attemptCount increments; retry-failed-shipments cron picks it up | ⏸️ |
+| Five consecutive failures | Force 5 carrier 503s | AdminAlertLabelFailure email sent to `ALERT_EMAIL`; gaveUp=true logged | ⏸️ |
+| Tracking provider down | Block carrier tracking endpoint | sync-tracking cron logs failure; after 5 ticks of total failure, AdminAlertTrackingStale email sent | ⏸️ |
+
+## Worker container
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| `WORKER_ENABLED=false` | `WORKER_ENABLED=false pnpm worker:dev` | Container logs "worker disabled" and exits 0 | ⏸️ |
+| All 6 cron jobs registered | `WORKER_ENABLED=true pnpm worker:dev` | Stderr shows: recover-pending-payment, cleanup-expired-carts, sync-tracking, retry-failed-shipments, enqueue-abandoned-cart, process-email-jobs | ⏸️ |
+| Email queue drains | Enqueue a test email → wait one tick | EmailJob row flips PENDING → SENT; Console (or Resend) shows the body | ⏸️ |
+
+## Email templates (preview)
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| `pnpm email dev` renders all 14 templates | `pnpm email dev` then open `localhost:3001` | List shows: VerifyEmailCode, ResetPasswordCode, OrderReceipt, OrderShipped, OrderDelivered, OrderCancelled, RoyalMailReturnLabel, ReturnInstructions, RefundIssued, RefundRejected, AbandonedCartReminder, AbandonedCartIncentive, AdminAlertLabelFailure, AdminAlertTrackingStale | ⏸️ |
+| Brand consistency | Open each preview in turn | Logo + footer + accent colour match `_layout.tsx`; no broken images | ⏸️ |
+
+## Final automated gate
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| `pnpm test` | At repo root | All tests pass; no `.skip` / `.todo` left over | ⏸️ |
+| `pnpm typecheck` | Same | Clean (or only the 4 known pre-existing PNG-import baseline errors) | ⏸️ |
+| `pnpm lint` | Same | Clean | ⏸️ |
+
+---
+
+## Phase 5 — Live carrier integration (🔒 still blocked on credentials)
 
 ## DHL Express integration (live API)
 
