@@ -4,14 +4,9 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/server/auth/session";
 import { isAdminRole } from "@/server/auth/admin";
 import { AdminSignOutButton } from "./_components/sign-out-button";
+import { NAV_SECTIONS } from "./_components/nav-sections";
 
 export const dynamic = "force-dynamic";
-
-const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/returns", label: "Returns" },
-];
 
 export default async function AdminLayout({
   children,
@@ -39,15 +34,24 @@ export default async function AdminLayout({
                 env: {envName}
               </p>
             </div>
-            <nav className="flex flex-col gap-1 text-sm">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded px-3 py-2 hover:bg-neutral-100"
-                >
-                  {item.label}
-                </Link>
+            <nav className="flex flex-col gap-5 text-sm">
+              {NAV_SECTIONS.map((section) => (
+                <div key={section.heading}>
+                  <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
+                    {section.heading}
+                  </p>
+                  <div className="flex flex-col gap-0.5">
+                    {section.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="rounded px-3 py-1.5 hover:bg-neutral-100"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               ))}
             </nav>
             <div className="mt-auto pt-6 border-t border-neutral-200 text-xs text-neutral-600">
