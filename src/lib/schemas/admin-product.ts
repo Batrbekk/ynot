@@ -19,6 +19,17 @@ export const ProductCreateSchema = z.object({
 
 export const ProductUpdateSchema = ProductCreateSchema.partial();
 
+export const ProductImagesAddSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        alt: z.string().max(200).optional(),
+      }),
+    )
+    .min(1),
+});
+
 export const ProductImagesReorderSchema = z.object({
   order: z.array(z.string().min(1)).min(1),
 });
