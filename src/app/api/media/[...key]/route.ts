@@ -26,7 +26,13 @@ export async function GET(
     return new Response('Not found', { status: 404 });
   }
   const { buffer, contentType } = await storage.get(fullKey);
-  return new Response(buffer, {
+  // BodyInit (DOM lib) doesn't accept Node's Buffer; slice to a plain
+  // ArrayBuffer (matches the pattern in api/admin/shipments/.../label.pdf).
+  const body = buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength,
+  ) as ArrayBuffer;
+  return new Response(body, {
     status: 200,
     headers: {
       'Content-Type': contentType,
