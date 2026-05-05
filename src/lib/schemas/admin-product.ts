@@ -17,7 +17,9 @@ export const ProductCreateSchema = z.object({
   preOrder: z.boolean().default(false),
 });
 
-export const ProductUpdateSchema = ProductCreateSchema.partial();
+export const ProductUpdateSchema = ProductCreateSchema.partial().extend({
+  categoryIds: z.array(z.string().min(1)).optional(),
+});
 
 export const ProductImagesAddSchema = z.object({
   items: z

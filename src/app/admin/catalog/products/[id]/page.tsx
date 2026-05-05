@@ -8,6 +8,7 @@ import { ImageUploader } from './_components/image-uploader';
 import { ImageGridReorder } from './_components/image-grid-reorder';
 import { StockEditor } from './_components/stock-editor';
 import { ColourEditor } from './_components/colour-editor';
+import { CategoryMultiselect } from './_components/category-multiselect';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,12 @@ export default async function AdminProductDetailPage({
     },
   });
   if (!product) notFound();
+
+  const allCategories = await prisma.category.findMany({
+    where: { deletedAt: null },
+    orderBy: [{ parentId: 'asc' }, { sortOrder: 'asc' }],
+    select: { id: true, name: true, slug: true, parentId: true },
+  });
 
   return (
     <div className="max-w-4xl">
@@ -114,6 +121,17 @@ export default async function AdminProductDetailPage({
         <ColourEditor
           productId={product.id}
           initial={product.colours.map((c) => ({ name: c.name, hex: c.hex }))}
+        />
+      </section>
+
+      <section className="mb-10">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-700 mb-4">
+          Categories
+        </h3>
+        <CategoryMultiselect
+          productId={product.id}
+          categories={allCategories}
+          selectedIds={product.categories.map((pc) => pc.categoryId)}
         />
       </section>
     </div>

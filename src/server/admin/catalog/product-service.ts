@@ -75,21 +75,38 @@ export async function updateProduct(opts: UpdateProductOptions) {
   return withAudit(
     { actorId, entityType: 'product', entityId: id, action: 'product.update', before, ip, ua },
     async () =>
-      prisma.product.update({
-        where: { id },
-        data: {
-          name: input.name,
-          slug,
-          description: input.description,
-          priceCents: input.priceCents,
-          materials: input.materials,
-          care: input.care,
-          sizing: input.sizing,
-          weightGrams: input.weightGrams,
-          hsCode: input.hsCode,
-          countryOfOriginCode: input.countryOfOriginCode,
-          preOrder: input.preOrder,
-        },
+      prisma.$transaction(async (tx) => {
+        const updated = await tx.product.update({
+          where: { id },
+          data: {
+            name: input.name,
+            slug,
+            description: input.description,
+            priceCents: input.priceCents,
+            materials: input.materials,
+            care: input.care,
+            sizing: input.sizing,
+            weightGrams: input.weightGrams,
+            hsCode: input.hsCode,
+            countryOfOriginCode: input.countryOfOriginCode,
+            preOrder: input.preOrder,
+          },
+        });
+        // Re-link categories when explicitly provided. We treat undefined as
+        // "no change" and an empty array as "remove all" — caller's intent
+        // must be unambiguous.
+        if (input.categoryIds !== undefined) {
+          await tx.productCategory.deleteMany({ where: { productId: id } });
+          if (input.categoryIds.length > 0) {
+            await tx.productCategory.createMany({
+              data: input.categoryIds.map((categoryId) => ({
+                productId: id,
+                categoryId,
+              })),
+            });
+          }
+        }
+        return updated;
       }),
   );
 }
