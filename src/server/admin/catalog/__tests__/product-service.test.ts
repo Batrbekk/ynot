@@ -7,6 +7,9 @@ import {
   changeProductStatus,
   setProductSizes,
   setProductColours,
+  addProductImages,
+  removeProductImage,
+  reorderProductImages,
 } from '../product-service';
 
 describe('createProduct', () => {
@@ -268,5 +271,129 @@ describe('setProductColours', () => {
     cs = await prisma.colourOption.findMany({ where: { productId: p.id } });
     expect(cs).toHaveLength(1);
     expect(cs[0].name).toBe('Stone');
+  });
+});
+
+describe('addProductImages', () => {
+  beforeEach(async () => {
+    await resetDb();
+    await prisma.user.create({ data: { id: 'u1', email: 'o@b.com', role: 'OWNER' } });
+  });
+
+  it('appends with incrementing sortOrder + writes audit', async () => {
+    const p = await createProduct({
+      input: {
+        name: 'X',
+        description: 'd',
+        priceCents: 1,
+        materials: '',
+        care: '',
+        sizing: '',
+        preOrder: false,
+      },
+      actorId: 'u1',
+    });
+    const result = await addProductImages({
+      productId: p.id,
+      items: [
+        { url: 'https://media/1.jpg', alt: 'one' },
+        { url: 'https://media/2.jpg', alt: 'two' },
+      ],
+      actorId: 'u1',
+    });
+    expect(result).toHaveLength(2);
+    expect(result[0].sortOrder).toBe(0);
+    expect(result[1].sortOrder).toBe(1);
+    const log = await prisma.auditLog.findFirst({ where: { action: 'product.images.add' } });
+    expect(log).not.toBeNull();
+  });
+
+  it('continues sortOrder on second call', async () => {
+    const p = await createProduct({
+      input: {
+        name: 'X',
+        description: 'd',
+        priceCents: 1,
+        materials: '',
+        care: '',
+        sizing: '',
+        preOrder: false,
+      },
+      actorId: 'u1',
+    });
+    await addProductImages({ productId: p.id, items: [{ url: 'a' }], actorId: 'u1' });
+    const second = await addProductImages({
+      productId: p.id,
+      items: [{ url: 'b' }],
+      actorId: 'u1',
+    });
+    expect(second[0].sortOrder).toBe(1);
+  });
+});
+
+describe('removeProductImage', () => {
+  beforeEach(async () => {
+    await resetDb();
+    await prisma.user.create({ data: { id: 'u1', email: 'o@b.com', role: 'OWNER' } });
+  });
+
+  it('deletes the image + writes audit', async () => {
+    const p = await createProduct({
+      input: {
+        name: 'X',
+        description: 'd',
+        priceCents: 1,
+        materials: '',
+        care: '',
+        sizing: '',
+        preOrder: false,
+      },
+      actorId: 'u1',
+    });
+    const [img] = await addProductImages({
+      productId: p.id,
+      items: [{ url: 'a' }],
+      actorId: 'u1',
+    });
+    await removeProductImage({ productId: p.id, imageId: img.id, actorId: 'u1' });
+    expect(await prisma.productImage.count()).toBe(0);
+  });
+});
+
+describe('reorderProductImages', () => {
+  beforeEach(async () => {
+    await resetDb();
+    await prisma.user.create({ data: { id: 'u1', email: 'o@b.com', role: 'OWNER' } });
+  });
+
+  it('updates sortOrder per provided id sequence', async () => {
+    const p = await createProduct({
+      input: {
+        name: 'X',
+        description: 'd',
+        priceCents: 1,
+        materials: '',
+        care: '',
+        sizing: '',
+        preOrder: false,
+      },
+      actorId: 'u1',
+    });
+    const imgs = await addProductImages({
+      productId: p.id,
+      items: [{ url: '1' }, { url: '2' }, { url: '3' }],
+      actorId: 'u1',
+    });
+    // Reverse order
+    await reorderProductImages({
+      productId: p.id,
+      order: [imgs[2].id, imgs[1].id, imgs[0].id],
+      actorId: 'u1',
+    });
+    const after = await prisma.productImage.findMany({
+      where: { productId: p.id },
+      orderBy: { sortOrder: 'asc' },
+    });
+    expect(after.map((i) => i.url)).toEqual(['3', '2', '1']);
   });
 });
