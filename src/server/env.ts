@@ -34,6 +34,13 @@ const EnvSchema = z.object({
   ALERT_EMAIL: z.email().optional(),
   SEED_OWNER_EMAIL: z.email().optional(),
   SEED_OWNER_PASSWORD: z.string().min(8).optional(),
+  // Phase 7a — media storage backend (product/CMS images). Mirrors Phase 5
+  // LABEL_STORAGE: 'local' default writes to MEDIA_STORAGE_PATH; 's3'/'r2'
+  // are placeholders for follow-on phases. MEDIA_PUBLIC_BASE_URL is optional;
+  // when unset, public URLs default to NEXT_PUBLIC_SITE_URL + "/api/media".
+  MEDIA_STORAGE: z.enum(['local', 's3', 'r2']).default('local'),
+  MEDIA_STORAGE_PATH: z.string().default('/var/lib/ynot/media'),
+  MEDIA_PUBLIC_BASE_URL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

@@ -110,3 +110,42 @@ describe("Phase 5 envs", () => {
     expect(() => parseEnv({ ...baseEnv, ALERT_EMAIL: "not-an-email" })).toThrow();
   });
 });
+
+describe("Phase 7a media envs", () => {
+  const baseEnv = {
+    DATABASE_URL: "postgresql://x",
+    REDIS_URL: "redis://x",
+    NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
+    NEXTAUTH_SECRET: "a".repeat(32),
+    ORDER_TOKEN_SECRET: "b".repeat(32),
+    STRIPE_SECRET_KEY: "sk_test_x",
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_x",
+    STRIPE_WEBHOOK_SECRET: "whsec_x",
+    ALERT_EMAIL: "a@b.com",
+    SHIPPING_PROVIDER: "mock",
+  };
+
+  it("parses MEDIA_STORAGE + MEDIA_STORAGE_PATH with defaults", () => {
+    const env = parseEnv(baseEnv);
+    expect(env.MEDIA_STORAGE).toBe("local");
+    expect(env.MEDIA_STORAGE_PATH).toBe("/var/lib/ynot/media");
+    expect(env.MEDIA_PUBLIC_BASE_URL).toBeUndefined();
+  });
+
+  it("rejects invalid MEDIA_STORAGE value", () => {
+    const fn = () =>
+      parseEnv({
+        ...baseEnv,
+        MEDIA_STORAGE: "azure",
+      } as unknown as Record<string, string>);
+    expect(fn).toThrow();
+  });
+
+  it("accepts overridden MEDIA_PUBLIC_BASE_URL", () => {
+    const env = parseEnv({
+      ...baseEnv,
+      MEDIA_PUBLIC_BASE_URL: "https://media.ynotlondon.com",
+    });
+    expect(env.MEDIA_PUBLIC_BASE_URL).toBe("https://media.ynotlondon.com");
+  });
+});
