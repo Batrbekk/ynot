@@ -16,7 +16,7 @@ const clientProject = {
     exclude: [
       "src/server/**",
       "src/app/api/**/*.test.{ts,tsx}",
-      "src/app/admin/**/*.test.{ts,tsx}",
+      "src/app/admin/**/*.server.test.{ts,tsx}",
       "src/worker/**",
     ],
     css: false,
@@ -39,7 +39,7 @@ const serverProject = {
     include: [
       "src/server/**/*.{test,spec}.{ts,tsx}",
       "src/app/api/**/*.test.{ts,tsx}",
-      "src/app/admin/**/*.test.{ts,tsx}",
+      "src/app/admin/**/*.server.test.{ts,tsx}",
       "src/worker/**/*.{test,spec}.{ts,tsx}",
       "scripts/**/*.{test,spec}.ts",
     ],
