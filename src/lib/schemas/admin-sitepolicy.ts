@@ -6,7 +6,7 @@ import { z } from 'zod';
  * worry about whether the row exists.
  */
 export const SitePolicyUpdateSchema = z.object({
-  defaultCurrency: z.enum(['GBP', 'USD', 'EUR']).optional(),
+  defaultCurrency: z.enum(['GBP']).optional(),
   defaultCarrier: z.enum(['ROYAL_MAIL', 'DHL']).optional(),
   freeShipThresholdCents: z.number().int().min(0).optional(),
   contactEmail: z.string().email().optional(),

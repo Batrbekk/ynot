@@ -15,5 +15,5 @@ export const StaticPageCreateSchema = z.object({
 
 export const StaticPageUpdateSchema = StaticPageCreateSchema.partial();
 
-export type StaticPageCreateInput = z.infer<typeof StaticPageCreateSchema>;
-export type StaticPageUpdateInput = z.infer<typeof StaticPageUpdateSchema>;
+export type StaticPageCreateInput = z.input<typeof StaticPageCreateSchema>;
+export type StaticPageUpdateInput = z.input<typeof StaticPageUpdateSchema>;
