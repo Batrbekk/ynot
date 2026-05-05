@@ -56,7 +56,15 @@ services:
 
   ynot-worker:
     image: ghcr.io/batrbekk/ynot-worker:${IMAGE_TAG:-latest}
-    # Inherit profiles ["prod"], depends_on, volumes, env from the base file.
+    # Override the base file's `.env.local`-only env_file with the prod
+    # secrets bundle (same source as the app container).
+    env_file: !override
+      - /etc/ynot/secrets.env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ynot:${POSTGRES_PASSWORD}@postgres:5432/ynot_prod?schema=public
+      REDIS_URL: redis://redis:6379
+      WORKER_ENABLED: "true"
 
   caddy:
     image: caddy:2-alpine

@@ -31,6 +31,19 @@ COPY . .
 ENV BUILD_PROD=1
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Build-time stubs: BUILD_PROD=1 already short-circuits the env validator, but
+# Stripe + downstream SDKs eagerly call `new Stripe(key)` at module load during
+# Next.js page-data collection. These dummy keys are *not* baked into runtime
+# env (the runner stage drops them) — runtime values come from
+# /etc/ynot/secrets.env via Compose env_file.
+ENV STRIPE_SECRET_KEY=sk_test_build_stub
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_build_stub
+ENV STRIPE_WEBHOOK_SECRET=whsec_build_stub
+ENV NEXTAUTH_SECRET=build_stub_nextauth_secret_at_least_32_chars_long
+ENV ORDER_TOKEN_SECRET=build_stub_order_token_secret_at_least_32_chars
+ENV NEXT_PUBLIC_SITE_URL=https://ynotlondon.com
+ENV DATABASE_URL=postgresql://stub:stub@buildonly:5432/stub
+ENV REDIS_URL=redis://buildonly:6379
 RUN pnpm prisma generate
 RUN pnpm build
 
@@ -39,6 +52,11 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Bind the standalone server to all interfaces (default would be Docker's
+# container hostname → only the assigned IP listens, so curl localhost fails
+# both for the HEALTHCHECK and Caddy's reverse_proxy).
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 # `curl` for the HEALTHCHECK; `openssl` + `libc6-compat` for the Prisma engine.
 RUN apk add --no-cache curl openssl libc6-compat
 
