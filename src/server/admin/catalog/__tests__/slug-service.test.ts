@@ -44,4 +44,12 @@ describe('ensureUniqueSlug', () => {
     const slug = await ensureUniqueSlug('category', 'outerwear');
     expect(slug).toBe('outerwear-2');
   });
+
+  it('works for staticpage model', async () => {
+    await prisma.staticPage.create({
+      data: { slug: 'about', title: 'About', bodyMarkdown: '' },
+    });
+    const slug = await ensureUniqueSlug('staticpage', 'about');
+    expect(slug).toBe('about-2');
+  });
 });

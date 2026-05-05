@@ -1,6 +1,6 @@
 import { prisma } from '@/server/db/client';
 
-type SluggedModel = 'product' | 'category';
+type SluggedModel = 'product' | 'category' | 'staticpage';
 
 export async function ensureUniqueSlug(
   model: SluggedModel,
@@ -22,6 +22,9 @@ async function collides(model: SluggedModel, slug: string, excludeId?: string): 
   if (excludeId) where.id = { not: excludeId };
   if (model === 'product') {
     return (await prisma.product.findFirst({ where })) !== null;
+  }
+  if (model === 'staticpage') {
+    return (await prisma.staticPage.findFirst({ where })) !== null;
   }
   return (await prisma.category.findFirst({ where })) !== null;
 }
