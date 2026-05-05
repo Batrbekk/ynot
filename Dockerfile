@@ -31,6 +31,12 @@ COPY . .
 ENV BUILD_PROD=1
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Sentry source-map upload — when this build-arg is provided, @sentry/nextjs's
+# webpack plugin uploads source maps to Sentry during `pnpm build`. Empty string
+# (the default) is a no-op: build still succeeds, source maps just aren't shipped.
+# CI passes the real token via `docker build --build-arg SENTRY_AUTH_TOKEN=...`.
+ARG SENTRY_AUTH_TOKEN=""
+ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
 # Build-time stubs: BUILD_PROD=1 already short-circuits the env validator, but
 # Stripe + downstream SDKs eagerly call `new Stripe(key)` at module load during
 # Next.js page-data collection. These dummy keys are *not* baked into runtime
