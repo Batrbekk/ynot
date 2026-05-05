@@ -1,0 +1,147 @@
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+
+interface Initial {
+  defaultCurrency: 'GBP' | 'USD' | 'EUR';
+  defaultCarrier: 'ROYAL_MAIL' | 'DHL';
+  freeShipThresholdCents: number;
+  contactEmail: string;
+  whatsappNumber: string;
+}
+
+interface Props {
+  initial: Initial;
+}
+
+/**
+ * Singleton SitePolicy form. Posts the full snapshot to PATCH
+ * /api/admin/content/settings; the service upserts so the row is created on
+ * first save when seed data hasn't been applied.
+ */
+export function SitePolicyForm({ initial }: Props): React.ReactElement {
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
+  const [error, setError] = React.useState<string | null>(null);
+  const [saved, setSaved] = React.useState(false);
+  const [defaultCurrency, setDefaultCurrency] = React.useState(initial.defaultCurrency);
+  const [defaultCarrier, setDefaultCarrier] = React.useState(initial.defaultCarrier);
+  const [freeShipThreshold, setFreeShipThreshold] = React.useState(
+    String(initial.freeShipThresholdCents),
+  );
+  const [contactEmail, setContactEmail] = React.useState(initial.contactEmail);
+  const [whatsappNumber, setWhatsappNumber] = React.useState(initial.whatsappNumber);
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>): void {
+    e.preventDefault();
+    setError(null);
+    setSaved(false);
+    const threshold = Number.parseInt(freeShipThreshold, 10);
+    if (!Number.isFinite(threshold) || threshold < 0) {
+      setError('Free shipping threshold must be a non-negative integer.');
+      return;
+    }
+    startTransition(async () => {
+      const res = await fetch('/api/admin/content/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          defaultCurrency,
+          defaultCarrier,
+          freeShipThresholdCents: threshold,
+          contactEmail,
+          whatsappNumber,
+        }),
+      });
+      if (!res.ok) {
+        setError(`Save failed (${res.status})`);
+        return;
+      }
+      setSaved(true);
+      router.refresh();
+    });
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-xs uppercase tracking-wider text-neutral-600">
+          Default currency
+        </span>
+        <select
+          value={defaultCurrency}
+          onChange={(e) =>
+            setDefaultCurrency(e.target.value as Initial['defaultCurrency'])
+          }
+          className="border border-neutral-300 rounded px-3 py-2 bg-white w-40"
+        >
+          <option value="GBP">GBP</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-xs uppercase tracking-wider text-neutral-600">
+          Default carrier
+        </span>
+        <select
+          value={defaultCarrier}
+          onChange={(e) => setDefaultCarrier(e.target.value as Initial['defaultCarrier'])}
+          className="border border-neutral-300 rounded px-3 py-2 bg-white w-40"
+        >
+          <option value="ROYAL_MAIL">Royal Mail</option>
+          <option value="DHL">DHL</option>
+        </select>
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-xs uppercase tracking-wider text-neutral-600">
+          Free-shipping threshold (in pence — e.g. 20000 = £200)
+        </span>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          value={freeShipThreshold}
+          onChange={(e) => setFreeShipThreshold(e.target.value)}
+          className="border border-neutral-300 rounded px-3 py-2 w-40"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-xs uppercase tracking-wider text-neutral-600">
+          Contact email
+        </span>
+        <input
+          type="email"
+          value={contactEmail}
+          onChange={(e) => setContactEmail(e.target.value)}
+          className="border border-neutral-300 rounded px-3 py-2 max-w-md"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-xs uppercase tracking-wider text-neutral-600">
+          WhatsApp number
+        </span>
+        <input
+          type="text"
+          value={whatsappNumber}
+          onChange={(e) => setWhatsappNumber(e.target.value)}
+          maxLength={40}
+          className="border border-neutral-300 rounded px-3 py-2 max-w-md font-mono text-sm"
+          placeholder="e.g. +44 20 1234 5678"
+        />
+      </label>
+      {error && <p className="text-sm text-red-700">{error}</p>}
+      {saved && <p className="text-sm text-green-700">Saved.</p>}
+      <div className="flex gap-3 mt-2">
+        <button
+          type="submit"
+          disabled={pending}
+          className="px-4 py-2 bg-neutral-900 text-white text-xs uppercase tracking-wider rounded disabled:opacity-50"
+        >
+          {pending ? 'Saving…' : 'Save settings'}
+        </button>
+      </div>
+    </form>
+  );
+}
