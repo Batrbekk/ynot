@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/server/db/client';
 import { ProductDetailsForm } from './_components/product-details-form';
 import { StatusActions } from './_components/status-actions';
+import { ImageUploader } from './_components/image-uploader';
+import { ImageGridReorder } from './_components/image-grid-reorder';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +56,22 @@ export default async function AdminProductDetailPage({
         </div>
         <StatusActions productId={product.id} status={product.status} />
       </header>
+
+      <section className="mb-10">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-700 mb-4">
+          Images
+        </h3>
+        <ImageUploader productId={product.id} />
+        <ImageGridReorder
+          productId={product.id}
+          images={product.images.map((i) => ({
+            id: i.id,
+            url: i.url,
+            alt: i.alt,
+            sortOrder: i.sortOrder,
+          }))}
+        />
+      </section>
 
       <section className="mb-10">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-700 mb-4">
