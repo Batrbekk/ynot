@@ -6,6 +6,8 @@ import { ProductDetailsForm } from './_components/product-details-form';
 import { StatusActions } from './_components/status-actions';
 import { ImageUploader } from './_components/image-uploader';
 import { ImageGridReorder } from './_components/image-grid-reorder';
+import { StockEditor } from './_components/stock-editor';
+import { ColourEditor } from './_components/colour-editor';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,6 +94,26 @@ export default async function AdminProductDetailPage({
             countryOfOriginCode: product.countryOfOriginCode,
             preOrder: product.preOrder,
           }}
+        />
+      </section>
+
+      <section className="mb-10">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-700 mb-4">
+          Stock
+        </h3>
+        <StockEditor
+          productId={product.id}
+          initial={product.sizes.map((s) => ({ size: s.size, stock: s.stock }))}
+        />
+      </section>
+
+      <section className="mb-10">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-700 mb-4">
+          Colours
+        </h3>
+        <ColourEditor
+          productId={product.id}
+          initial={product.colours.map((c) => ({ name: c.name, hex: c.hex }))}
         />
       </section>
     </div>
