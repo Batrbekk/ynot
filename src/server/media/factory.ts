@@ -34,3 +34,19 @@ export function getMediaStorage(env: FactoryEnv): MediaStorage {
 export function _resetMediaStorageForTests(): void {
   cached = null;
 }
+
+interface PublicUrlEnv {
+  MEDIA_PUBLIC_BASE_URL?: string;
+  NEXT_PUBLIC_SITE_URL: string;
+}
+
+/**
+ * Resolve the public-facing URL for a stored media key. Defaults to
+ * `${NEXT_PUBLIC_SITE_URL}/api/media`, but a CDN/static host can override
+ * via `MEDIA_PUBLIC_BASE_URL`. Joins cleanly regardless of trailing slash
+ * on the base or leading slash on the key.
+ */
+export function publicUrlFor(key: string, env: PublicUrlEnv): string {
+  const base = env.MEDIA_PUBLIC_BASE_URL ?? `${env.NEXT_PUBLIC_SITE_URL}/api/media`;
+  return `${base.replace(/\/$/, '')}/${key.replace(/^\//, '')}`;
+}
