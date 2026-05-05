@@ -7,6 +7,8 @@ import type { ProductStatus } from '@prisma/client';
 import type {
   ProductCreateInput,
   ProductUpdateInput,
+  ProductSizesUpdateInput,
+  ProductColoursUpdateInput,
 } from '@/lib/schemas/admin-product';
 
 export interface CreateProductOptions {
@@ -125,6 +127,79 @@ export async function changeProductStatus(opts: ChangeProductStatusOptions) {
               ? new Date()
               : before.publishedAt,
         },
+      }),
+  );
+}
+
+export interface SetProductSizesOptions {
+  productId: string;
+  sizes: ProductSizesUpdateInput['sizes'];
+  actorId: string;
+  ip?: string;
+  ua?: string;
+}
+
+export async function setProductSizes(opts: SetProductSizesOptions) {
+  const { productId, sizes, actorId, ip, ua } = opts;
+  const before = await prisma.productSize.findMany({ where: { productId } });
+  return withAudit(
+    {
+      actorId,
+      entityType: 'product',
+      entityId: productId,
+      action: 'product.stock.update',
+      before,
+      ip,
+      ua,
+    },
+    async () => {
+      for (const s of sizes) {
+        await prisma.productSize.upsert({
+          where: { productId_size: { productId, size: s.size } },
+          create: { productId, size: s.size, stock: s.stock },
+          update: { stock: s.stock },
+        });
+      }
+      return prisma.productSize.findMany({ where: { productId } });
+    },
+  );
+}
+
+export interface SetProductColoursOptions {
+  productId: string;
+  colours: ProductColoursUpdateInput['colours'];
+  actorId: string;
+  ip?: string;
+  ua?: string;
+}
+
+export async function setProductColours(opts: SetProductColoursOptions) {
+  const { productId, colours, actorId, ip, ua } = opts;
+  const before = await prisma.colourOption.findMany({ where: { productId } });
+  return withAudit(
+    {
+      actorId,
+      entityType: 'product',
+      entityId: productId,
+      action: 'product.colours.update',
+      before,
+      ip,
+      ua,
+    },
+    async () =>
+      prisma.$transaction(async (tx) => {
+        await tx.colourOption.deleteMany({ where: { productId } });
+        if (colours.length > 0) {
+          await tx.colourOption.createMany({
+            data: colours.map((c, i) => ({
+              productId,
+              name: c.name,
+              hex: c.hex,
+              sortOrder: i,
+            })),
+          });
+        }
+        return tx.colourOption.findMany({ where: { productId } });
       }),
   );
 }
