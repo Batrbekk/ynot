@@ -8,11 +8,18 @@ export const dynamic = "force-dynamic";
  * Operations dashboard. Each card is a snapshot count, deliberately small
  * Prisma queries so this page renders sub-100ms even with thousands of orders.
  *
+ * Phase 5 cards (kept):
  * - Pending shipments: labels generated, not yet despatched.
  * - Returns awaiting inspection: customer parcel received, admin needs to
  *   approve / reject.
  * - Label-failure alerts: shipments at the give-up threshold (5 attempts).
  * - Tracking-stale alerts: live shipments with no carrier update in > 48h.
+ *
+ * Phase 7a cards (added):
+ * - Drafts pending publish: Product.status='DRAFT' AND deletedAt=null.
+ * - Low-stock alerts: ProductSize.stock <= 2.
+ * - Active promos: PromoCode.isActive=true AND (expiresAt IS NULL OR
+ *   expiresAt > now()).
  */
 /**
  * Pulled out of the render body so the React-purity lint (which flags
@@ -23,13 +30,21 @@ function fortyEightHoursAgoSnapshot(): Date {
   return new Date(Date.now() - 48 * 3600 * 1000);
 }
 
+function nowSnapshot(): Date {
+  return new Date();
+}
+
 export default async function AdminDashboard() {
   const fortyEightHoursAgo = fortyEightHoursAgoSnapshot();
+  const now = nowSnapshot();
   const [
     pendingShipments,
     returnsAwaitingInspection,
     labelFailures,
     trackingStale,
+    draftsPendingPublish,
+    lowStockCount,
+    activePromosCount,
   ] = await Promise.all([
     prisma.shipment.count({
       where: {
@@ -47,6 +62,19 @@ export default async function AdminDashboard() {
         shippedAt: { not: null },
         deliveredAt: null,
         updatedAt: { lt: fortyEightHoursAgo },
+      },
+    }),
+    prisma.product.count({
+      where: { status: "DRAFT", deletedAt: null },
+    }),
+    prisma.productSize.count({
+      where: { stock: { lte: 2 } },
+    }),
+    prisma.promoCode.count({
+      where: {
+        isActive: true,
+        deletedAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
       },
     }),
   ]);
@@ -75,6 +103,24 @@ export default async function AdminDashboard() {
       value: trackingStale,
       href: "/admin/orders?status=SHIPPED",
       tone: trackingStale > 0 ? "warn" : ("default" as const),
+    },
+    {
+      label: "Drafts pending publish",
+      value: draftsPendingPublish,
+      href: "/admin/catalog/products?status=DRAFT",
+      tone: draftsPendingPublish > 0 ? "warn" : ("default" as const),
+    },
+    {
+      label: "Low-stock alerts",
+      value: lowStockCount,
+      href: "/admin/catalog/products",
+      tone: lowStockCount > 0 ? "warn" : ("default" as const),
+    },
+    {
+      label: "Active promos",
+      value: activePromosCount,
+      href: "/admin/marketing/promos?status=active",
+      tone: "default" as const,
     },
   ];
 
