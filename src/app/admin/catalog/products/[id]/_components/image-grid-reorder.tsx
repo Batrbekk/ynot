@@ -21,15 +21,23 @@ interface Props {
  * order during the drag; `onReorder` fires the PATCH after the user releases
  * the item and only if the order actually changed (compare ids).
  */
-export function ImageGridReorder({ productId, images }: Props): React.ReactElement {
+export function ImageGridReorder(props: Props): React.ReactElement {
+  // Re-mount the inner stateful component when the parent's `images` array
+  // identity changes (server snapshot updated via `router.refresh()`); this
+  // lets us hold optimistic local order in `useState` without an effect to
+  // re-sync.
+  const key = props.images.map((i) => i.id).join('|');
+  return <ImageGridReorderInner key={key} {...props} />;
+}
+
+function ImageGridReorderInner({
+  productId,
+  images,
+}: Props): React.ReactElement {
   const router = useRouter();
   const [items, setItems] = React.useState(images);
   const [pending, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    setItems(images);
-  }, [images]);
 
   function commitOrder(next: Image[]): void {
     const same =

@@ -18,11 +18,13 @@ export async function DELETE(req: Request, ctx: Ctx): Promise<Response> {
     throw e;
   }
 
+  const actorId = session.user?.id;
+  if (!actorId) return new Response('Forbidden', { status: 403 });
   const { id, imgId } = await ctx.params;
   await removeProductImage({
     productId: id,
     imageId: imgId,
-    actorId: session.user!.id,
+    actorId,
     ip: req.headers.get('x-forwarded-for') ?? undefined,
     ua: req.headers.get('user-agent') ?? undefined,
   });

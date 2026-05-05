@@ -33,11 +33,14 @@ export async function POST(req: Request, ctx: Ctx): Promise<Response> {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const actorId = session.user?.id;
+  if (!actorId) return new Response('Forbidden', { status: 403 });
+
   try {
     const product = await changeProductStatus({
       id,
       to: parsed.data.to,
-      actorId: session.user!.id,
+      actorId,
       ip: req.headers.get('x-forwarded-for') ?? undefined,
       ua: req.headers.get('user-agent') ?? undefined,
     });

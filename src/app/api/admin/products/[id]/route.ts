@@ -28,6 +28,8 @@ export async function PATCH(req: Request, ctx: Ctx): Promise<Response> {
     throw e;
   }
 
+  const actorId = session.user?.id;
+  if (!actorId) return new Response('Forbidden', { status: 403 });
   const { id } = await ctx.params;
   const body = await req.json().catch(() => null);
   const parsed = ProductUpdateSchema.safeParse(body);
@@ -38,7 +40,7 @@ export async function PATCH(req: Request, ctx: Ctx): Promise<Response> {
   const product = await updateProduct({
     id,
     input: parsed.data,
-    actorId: session.user!.id,
+    actorId,
     ip: req.headers.get('x-forwarded-for') ?? undefined,
     ua: req.headers.get('user-agent') ?? undefined,
   });
@@ -54,11 +56,13 @@ export async function DELETE(req: Request, ctx: Ctx): Promise<Response> {
     throw e;
   }
 
+  const actorId = session.user?.id;
+  if (!actorId) return new Response('Forbidden', { status: 403 });
   const { id } = await ctx.params;
   const product = await changeProductStatus({
     id,
     to: 'ARCHIVED',
-    actorId: session.user!.id,
+    actorId,
     ip: req.headers.get('x-forwarded-for') ?? undefined,
     ua: req.headers.get('user-agent') ?? undefined,
   });

@@ -26,10 +26,12 @@ export async function PATCH(req: Request, ctx: Ctx): Promise<Response> {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const actorId = session.user?.id;
+  if (!actorId) return new Response('Forbidden', { status: 403 });
   const colours = await setProductColours({
     productId: id,
     colours: parsed.data.colours,
-    actorId: session.user!.id,
+    actorId,
     ip: req.headers.get('x-forwarded-for') ?? undefined,
     ua: req.headers.get('user-agent') ?? undefined,
   });

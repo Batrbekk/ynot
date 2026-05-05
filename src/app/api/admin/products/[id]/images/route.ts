@@ -36,10 +36,12 @@ export async function POST(req: Request, ctx: Ctx): Promise<Response> {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const actorId = session.user?.id;
+  if (!actorId) return new Response('Forbidden', { status: 403 });
   const created = await addProductImages({
     productId: id,
     items: parsed.data.items,
-    actorId: session.user!.id,
+    actorId,
     ip: req.headers.get('x-forwarded-for') ?? undefined,
     ua: req.headers.get('user-agent') ?? undefined,
   });
@@ -62,10 +64,12 @@ export async function PATCH(req: Request, ctx: Ctx): Promise<Response> {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const actorId = session.user?.id;
+  if (!actorId) return new Response('Forbidden', { status: 403 });
   const reordered = await reorderProductImages({
     productId: id,
     order: parsed.data.order,
-    actorId: session.user!.id,
+    actorId,
     ip: req.headers.get('x-forwarded-for') ?? undefined,
     ua: req.headers.get('user-agent') ?? undefined,
   });
