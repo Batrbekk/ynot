@@ -9,6 +9,8 @@ const fixture = {
   description: "Tailored.",
   priceCents: 89500,
   currency: "GBP" as const,
+  status: "PUBLISHED" as const,
+  publishedAt: null as Date | null,
   preOrder: false,
   materials: "Lamb leather",
   care: "Wipe with damp cloth",

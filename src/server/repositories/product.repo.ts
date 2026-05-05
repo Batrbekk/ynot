@@ -15,9 +15,17 @@ const include = {
   categories: { include: { category: true } },
 } as const;
 
+/**
+ * Storefront visibility predicate. Storefront product queries only ever return
+ * PUBLISHED, non-soft-deleted rows — DRAFT and ARCHIVED stay hidden from the
+ * public site. Admin queries (in `src/server/admin/*`) bypass this and see
+ * everything by querying `prisma.product` directly.
+ */
+const storefrontVisible = { status: "PUBLISHED", deletedAt: null } as const;
+
 export async function findProductBySlug(slug: string): Promise<ProductWithRelations | null> {
   const product = await prisma.product.findFirst({
-    where: { slug, deletedAt: null },
+    where: { slug, ...storefrontVisible },
     include,
   });
   return product as ProductWithRelations | null;
@@ -25,7 +33,7 @@ export async function findProductBySlug(slug: string): Promise<ProductWithRelati
 
 export async function listProducts(): Promise<ProductWithRelations[]> {
   const products = await prisma.product.findMany({
-    where: { deletedAt: null },
+    where: { ...storefrontVisible },
     orderBy: { createdAt: "desc" },
     include,
   });
@@ -37,7 +45,7 @@ export async function listProductsByCategory(
 ): Promise<ProductWithRelations[]> {
   const products = await prisma.product.findMany({
     where: {
-      deletedAt: null,
+      ...storefrontVisible,
       categories: { some: { category: { slug: categorySlug } } },
     },
     orderBy: { createdAt: "desc" },
@@ -48,7 +56,7 @@ export async function listProductsByCategory(
 
 export async function listNewArrivals(limit: number): Promise<ProductWithRelations[]> {
   const products = await prisma.product.findMany({
-    where: { deletedAt: null },
+    where: { ...storefrontVisible },
     orderBy: { createdAt: "desc" },
     take: limit,
     include,
@@ -61,7 +69,7 @@ export async function listRecommendations(
   limit: number,
 ): Promise<ProductWithRelations[]> {
   const products = await prisma.product.findMany({
-    where: { deletedAt: null, slug: { not: excludeSlug } },
+    where: { ...storefrontVisible, slug: { not: excludeSlug } },
     orderBy: { createdAt: "desc" },
     take: limit,
     include,
@@ -74,7 +82,7 @@ export async function searchProducts(query: string): Promise<ProductWithRelation
   if (!q) return [];
   const products = await prisma.product.findMany({
     where: {
-      deletedAt: null,
+      ...storefrontVisible,
       OR: [
         { name: { contains: q, mode: "insensitive" } },
         { description: { contains: q, mode: "insensitive" } },

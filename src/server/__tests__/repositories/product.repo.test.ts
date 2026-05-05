@@ -26,6 +26,7 @@ async function seedTwoProducts() {
       materials: "Lamb leather",
       care: "Wipe with damp cloth",
       sizing: "True to size",
+      status: "PUBLISHED",
       categories: { create: [{ categoryId: jackets.id }] },
     },
   });
@@ -38,6 +39,7 @@ async function seedTwoProducts() {
       materials: "Silk",
       care: "Dry clean",
       sizing: "Runs small",
+      status: "PUBLISHED",
       categories: { create: [{ categoryId: dresses.id }] },
     },
   });
@@ -50,10 +52,40 @@ async function seedTwoProducts() {
       materials: "Wool",
       care: "Dry clean",
       sizing: "True to size",
+      status: "PUBLISHED",
       deletedAt: new Date(),
     },
   });
   return { jacket, dress };
+}
+
+async function seedDraftAndArchived(categoryId: string) {
+  await prisma.product.create({
+    data: {
+      slug: "draft-coat",
+      name: "Draft Coat",
+      description: "WIP.",
+      priceCents: 30000,
+      materials: "Wool",
+      care: "Dry clean",
+      sizing: "True to size",
+      status: "DRAFT",
+      categories: { create: [{ categoryId }] },
+    },
+  });
+  await prisma.product.create({
+    data: {
+      slug: "archived-cape",
+      name: "Archived Cape",
+      description: "Old SS.",
+      priceCents: 30000,
+      materials: "Wool",
+      care: "Dry clean",
+      sizing: "True to size",
+      status: "ARCHIVED",
+      categories: { create: [{ categoryId }] },
+    },
+  });
 }
 
 describe("product.repo", () => {
@@ -133,5 +165,61 @@ describe("product.repo", () => {
     await seedTwoProducts();
     const results = await searchProducts("Removed");
     expect(results).toEqual([]);
+  });
+
+  it("listProducts excludes DRAFT and ARCHIVED products", async () => {
+    await seedTwoProducts();
+    const cat = await prisma.category.findFirstOrThrow({ where: { slug: "jackets" } });
+    await seedDraftAndArchived(cat.id);
+    const all = await listProducts();
+    expect(all.map((p) => p.slug).sort()).toEqual(["leather-jacket", "silk-dress"]);
+  });
+
+  it("findProductBySlug returns null for DRAFT product", async () => {
+    await seedTwoProducts();
+    const cat = await prisma.category.findFirstOrThrow({ where: { slug: "jackets" } });
+    await seedDraftAndArchived(cat.id);
+    expect(await findProductBySlug("draft-coat")).toBeNull();
+  });
+
+  it("findProductBySlug returns null for ARCHIVED product", async () => {
+    await seedTwoProducts();
+    const cat = await prisma.category.findFirstOrThrow({ where: { slug: "jackets" } });
+    await seedDraftAndArchived(cat.id);
+    expect(await findProductBySlug("archived-cape")).toBeNull();
+  });
+
+  it("listProductsByCategory excludes DRAFT and ARCHIVED products", async () => {
+    await seedTwoProducts();
+    const cat = await prisma.category.findFirstOrThrow({ where: { slug: "jackets" } });
+    await seedDraftAndArchived(cat.id);
+    const items = await listProductsByCategory("jackets");
+    expect(items.map((p) => p.slug)).toEqual(["leather-jacket"]);
+  });
+
+  it("listNewArrivals excludes DRAFT and ARCHIVED products", async () => {
+    await seedTwoProducts();
+    const cat = await prisma.category.findFirstOrThrow({ where: { slug: "jackets" } });
+    await seedDraftAndArchived(cat.id);
+    const top = await listNewArrivals(10);
+    expect(top.map((p) => p.slug).sort()).toEqual(["leather-jacket", "silk-dress"]);
+  });
+
+  it("listRecommendations excludes DRAFT and ARCHIVED products", async () => {
+    await seedTwoProducts();
+    const cat = await prisma.category.findFirstOrThrow({ where: { slug: "jackets" } });
+    await seedDraftAndArchived(cat.id);
+    const recs = await listRecommendations("leather-jacket", 10);
+    expect(recs.map((p) => p.slug)).toEqual(["silk-dress"]);
+  });
+
+  it("searchProducts excludes DRAFT and ARCHIVED products", async () => {
+    await seedTwoProducts();
+    const cat = await prisma.category.findFirstOrThrow({ where: { slug: "jackets" } });
+    await seedDraftAndArchived(cat.id);
+    const draftResult = await searchProducts("Draft");
+    expect(draftResult).toEqual([]);
+    const archivedResult = await searchProducts("Archived");
+    expect(archivedResult).toEqual([]);
   });
 });

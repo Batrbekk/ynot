@@ -22,6 +22,7 @@ async function seedTwo() {
       materials: "Lamb leather",
       care: "Wipe with damp cloth",
       sizing: "True to size",
+      status: "PUBLISHED",
       sizes: { create: [{ size: "M", stock: 5 }] },
       colours: { create: [{ name: "Black", hex: "#000000", sortOrder: 0 }] },
       categories: { create: [{ categoryId: cat.id }] },
@@ -37,6 +38,7 @@ async function seedTwo() {
       materials: "Silk",
       care: "Dry clean",
       sizing: "Runs small",
+      status: "PUBLISHED",
     },
   });
 }

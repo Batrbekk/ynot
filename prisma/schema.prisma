@@ -123,6 +123,12 @@ enum CartEventKind {
   CHECKED_OUT
 }
 
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 // =====================================================================
 // Catalog
 // =====================================================================
@@ -134,6 +140,8 @@ model Product {
   description String
   priceCents  Int
   currency    Currency  @default(GBP)
+  status      ProductStatus @default(DRAFT)
+  publishedAt DateTime?
   preOrder    Boolean   @default(false)
   materials   String
   care        String
@@ -156,6 +164,7 @@ model Product {
 
   @@index([deletedAt])
   @@index([createdAt])
+  @@index([status, deletedAt])
 }
 
 model ProductImage {

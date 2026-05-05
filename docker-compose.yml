@@ -80,6 +80,8 @@ services:
         sleep infinity
     ports:
       - "3000:3000"
+    volumes:
+      - ynot-media:/var/lib/ynot/media
 
   nginx:
     image: nginx:1.27-alpine
@@ -124,3 +126,4 @@ volumes:
   ynot_postgres_data:
   ynot_redis_data:
   ynot-labels:
+  ynot-media:

@@ -16,6 +16,7 @@ async function seed() {
       materials: "Lamb leather",
       care: "Wipe with damp cloth",
       sizing: "True to size",
+      status: "PUBLISHED",
       categories: { create: [{ categoryId: cat.id }] },
     },
   });

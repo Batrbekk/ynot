@@ -390,6 +390,66 @@ Run before each production deploy. Tick boxes inline as you go; commit ticks bac
 
 ---
 
+# Phase 7a — Launch Admin (catalog + CMS + promos) (⏸️ pending live verification)
+
+**Status:** ⏸️ — code merged on `feature/backend-phase-7a-launch-admin`; awaiting end-to-end manual run with the real admin UI in `pnpm dev`. Replaces and extends the Phase 5 mini admin: every catalog, CMS, and promo write is now audited and the storefront only ever shows `status='PUBLISHED'` non-soft-deleted rows.
+
+**Requirements running:** `pnpm dev` + Postgres/Redis Docker + a seeded OWNER user (`User.role = OWNER`) signed in. Admin paths live under `/admin/{catalog,content,marketing}`. Mutations require OWNER; ADMIN can read.
+
+## Catalog (Products + Categories)
+
+| Check | URL / action | Expected | Status |
+|---|---|---|---|
+| Create draft product → upload 3 images → reorder via drag → set sizes M=5, L=3 → set colours → publish → appears on storefront | `/admin/catalog/products/new` then PDP | Product lands DRAFT; images upload to `/api/admin/media/upload`; drag-reorder persists `sortOrder`; status goes DRAFT → PUBLISHED; PDP shows it | ⏸️ |
+| Edit category tree (parent move) → no cycles allowed | `/admin/catalog/categories` | Reparenting a category under one of its own descendants is rejected with a friendly error; tree stays intact | ⏸️ |
+| Archive product → storefront hides it | Toggle status to ARCHIVED | PDP returns 404; category grids omit it | ⏸️ |
+
+## Content (Hero / Announcements / Lookbook / StaticPages / SitePolicy)
+
+| Check | URL / action | Expected | Status |
+|---|---|---|---|
+| Activate Hero #2 → Hero #1 deactivates automatically | `/admin/content/hero` | Only one HeroBlock has `isActive=true` at any time; storefront `/` reflects the active one | ⏸️ |
+| Reorder lookbook images via drag → storefront reflects order | `/admin/content/lookbook` then `/lookbook` | New order persists; reload preserves; storefront grid matches | ⏸️ |
+| Edit StaticPage Markdown → live preview matches storefront render | `/admin/content/pages/[id]` then `/<slug>` | Live preview pane mirrors the eventual storefront markup; save and reload sticks | ⏸️ |
+| Announcement create + activate | `/admin/content/announcements` | New announcement appears in storefront banner; deactivate hides it | ⏸️ |
+| SitePolicy single-form save | `/admin/content/settings` | All policy fields save and round-trip; storefront /privacy etc. reflect the new copy | ⏸️ |
+
+## Marketing (PromoCode)
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| Create promo code → use at checkout → `usageCount` increments | `/admin/marketing/promos/new` then storefront checkout | New code accepted at cart; redemption row written; admin list shows incremented usage | ⏸️ |
+| Deactivate (no hard delete) | Click Deactivate on `/admin/marketing/promos/[id]` | `isActive=false`; subsequent attempts to redeem are rejected; existing PromoRedemption rows preserved (referential integrity) | ⏸️ |
+
+## Audit log
+
+| Check | How | Expected | Status |
+|---|---|---|---|
+| All admin actions write `AuditLog` rows | `psql -c "SELECT * FROM \"AuditLog\" ORDER BY \"createdAt\" DESC LIMIT 20"` | Every catalog/CMS/promo mutation appears with `actorId`, `action`, `entityType`, before/after JSON | ⏸️ |
+
+## Media upload
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| Image upload rejects 6MB JPEG with friendly error | Drop a >5MB JPEG into the uploader | Per-file rejected entry with "File exceeds 5MB limit"; other files in the batch still succeed | ⏸️ |
+| Image upload rejects PDF MIME with friendly error | Drop a `.pdf` | Per-file rejected entry with "Unsupported MIME type" | ⏸️ |
+| Image stream `/api/media/<key>` works in browser | Open the public URL of an uploaded image | Image renders; response carries `Cache-Control: public, max-age=..., immutable` | ⏸️ |
+
+## RBAC
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| Non-OWNER user (e.g. ADMIN) gets 403 on mutation routes | Sign in as ADMIN, POST `/api/admin/products` | 403 Forbidden | ⏸️ |
+| Unauthenticated visitor on any `/admin/*` page | Hit URL while signed out | Redirect to sign-in | ⏸️ |
+
+## Smoke
+
+| Check | Action | Expected | Status |
+|---|---|---|---|
+| All admin pages render in `pnpm dev` without server errors | Click through every page in the admin sidebar | No 500s; no unhandled promise rejections in the server log | ⏸️ |
+
+---
+
 # Phase 6 — Admin Panel & Ops (🧊 not started)
 
 **Will need verified once shipped:**
