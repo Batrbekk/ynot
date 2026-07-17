@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ynot
 
-## Getting Started
+A production-grade **e-commerce storefront** built on the latest Next.js App Router — full catalog, cart, checkout, payments, and order fulfilment in a single, strictly-typed TypeScript codebase.
 
-First, run the development server:
+## Highlights
+
+- **Storefront & catalog** — products with sizes, colour options, categories, lookbooks, editorial hero blocks and static pages
+- **Cart & checkout** — persistent carts, cart-event tracking, promo codes and pre-order batches
+- **Payments** — Stripe (Payment Intents + webhooks)
+- **Orders & fulfilment** — full order lifecycle, shipments, carrier tracking, returns & refunds
+- **Auth** — NextAuth (credentials + Prisma adapter) with role-based access
+- **Transactional email** — React Email templates delivered through Resend
+- **Background jobs** — `node-cron` workers backed by Redis (ioredis) for queues & caching
+- **Observability** — Sentry error & performance monitoring
+- **Quality** — Playwright end-to-end tests, unit/integration tests, ESLint and strict TypeScript
+
+## Tech stack
+
+`Next.js 15` · `TypeScript` · `Prisma` · `PostgreSQL` · `Stripe` · `NextAuth` · `Redis` · `Resend / React Email` · `Sentry` · `Zustand` · `Tailwind CSS` · `Playwright` · `Docker`
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env        # fill in the required values
+
+pnpm db:up                  # start Postgres/Redis via docker-compose
+pnpm db:migrate             # apply Prisma migrations
+pnpm db:seed                # seed demo data
+
+pnpm dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Useful scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Run the development server |
+| `pnpm build` / `pnpm start` | Production build & serve |
+| `pnpm test` / `pnpm test:watch` | Run the test suite |
+| `pnpm typecheck` | Strict TypeScript check |
+| `pnpm db:studio` | Open Prisma Studio |
+| `pnpm db:reset` | Reset & reseed the database |
+| `pnpm email` | Preview React Email templates |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure
 
-## Learn More
+```
+app/        Next.js App Router routes (storefront, checkout, account, admin)
+prisma/     Schema, migrations & seed
+e2e/        Playwright end-to-end tests
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with ❤️ by [Batyrbek Kuandyk](https://github.com/Batrbekk).
